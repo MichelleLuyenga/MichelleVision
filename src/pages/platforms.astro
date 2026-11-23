@@ -1,0 +1,117 @@
+---
+// src/pages/platforms.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ogWork } from '../lib/og';
+import { platforms, sharedLayer, LAUNCH_TEXT } from '../lib/platforms';
+
+const roleLabel = {
+  FLAGSHIP: 'FLAGSHIP',
+  CLIENT_PLATFORM: 'CLIENT_PLATFORM',
+  SELECTIVE: 'WHEN_NEEDED',
+} as const;
+
+const chooser = [
+  { need: 'I need a new, fast marketing site', pick: 'Astro' },
+  { need: 'My team already runs WordPress or WooCommerce', pick: 'Migration'},
+  { need: 'My marketers must edit pages without a developer', pick: 'Astro with Sanity' },
+  { need: 'I run an online store', pick: ' Next.js with headless storefront for a larger catalog' },
+  { need: 'I am not sure yet', pick: 'Tell me about your goals and current tools and I will recommend one' },
+];
+---
+
+<BaseLayout
+  title="Which Platform Fits Your Project? Astro or Next.js"
+  description="A plain-language guide to choosing between Astro or Next.js for a marketing website, with the tracking, CRM, and automation layer that works on all."
+  image={ogWork('platforms')}
+>
+  <section class="platforms-container">
+    <div class="platforms-header">
+      <p class="tag-mono accent-text">// PLATFORM_GUIDE // ASTRO_NEXT.JS</p>
+      <h1 class="page-heading">Which platform fits your project?</h1>
+      <p class="text-muted subtitle">
+        I am a marketing web developer, so I start from your goals and the tools your team already uses, then pick the platform. The tracking, CRM, and automation layer works the same on all three.
+      </p>
+    </div>
+
+    <div class="platform-grid">
+      {platforms.map((p) => (
+        <article class:list={['platform-card', { flagship: p.role === 'FLAGSHIP' }]}>
+          <p class="tag-mono role">[ {roleLabel[p.role]} ]</p>
+          <h2 class="platform-name">{p.name}</h2>
+          <p class="text-muted platform-summary">{p.summary}</p>
+          <h3 class="tag-mono list-label">GOOD_FOR</h3>
+          <ul class="check-list">
+            {p.bestFor.map((item) => <li>{item}</li>)}
+          </ul>
+          <p class="watch tag-mono"><span class="accent-text">WATCH_OUT:</span> <span class="text-muted">{p.watchOut}</span></p>
+        </article>
+      ))}
+    </div>
+
+    <div class="chooser">
+      <h2 class="section-title">Quick chooser</h2>
+      <dl class="chooser-list">
+        {chooser.map((c) => (
+          <div class="chooser-row">
+            <dt>{c.need}</dt>
+            <dd class="tag-mono">&rarr; {c.pick}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="shared">
+      <h2 class="section-title">The same MarTech layer on every platform</h2>
+      <ul class="shared-list tag-mono">
+        {sharedLayer.map((item) => <li>{item}</li>)}
+      </ul>
+      <p class="text-muted shared-note">
+        Sample builds on both platforms are in progress. {LAUNCH_TEXT}. <a href="/cases" class="accent-text">See the plan</a>.
+      </p>
+    </div>
+
+    <div class="platform-cta">
+      <a href="/contact?stream=consultation" class="cta-primary tag-mono">TELL_ME_ABOUT_YOUR_PROJECT &rarr;</a>
+      <a href="/services" class="cta-secondary tag-mono">VIEW_PACKAGES</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .platforms-container { max-width: 64rem; margin: 4rem auto; padding: 0 1.25rem; }
+  .platforms-header { margin-bottom: 3rem; }
+  .accent-text { color: #C9A96E; }
+  .page-heading { font-size: 2.5rem; color: #EDE9F0; margin: 1rem 0; }
+  .subtitle { font-size: 1.05rem; line-height: 1.6; max-width: 48rem; }
+  .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.5rem; }
+  .platform-card { background: #111317; border: 1px solid #1A1C23; padding: 1.75rem; border-radius: 0.375rem; display: flex; flex-direction: column; }
+  .platform-card.flagship { border-color: #C9A96E; }
+  .role { font-size: 0.7rem; margin: 0 0 0.5rem; }
+  .platform-name { font-size: 1.5rem; color: #EDE9F0; margin: 0 0 0.75rem; }
+  .platform-summary { font-size: 0.9rem; line-height: 1.55; margin: 0 0 1.25rem; }
+  .list-label { font-size: 0.7rem; margin: 0 0 0.5rem; }
+  .check-list { list-style: none; padding: 0; margin: 0 0 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; color: #D4D4D8; flex-grow: 1; }
+  .check-list li { padding-left: 1.25rem; position: relative; line-height: 1.45; }
+  .check-list li::before { content: '✓'; position: absolute; left: 0; color: #C9A96E; }
+  .watch { font-size: 0.75rem; line-height: 1.5; margin: 0; padding-top: 1rem; border-top: 1px solid #1A1C23; }
+  .section-title { font-size: 1.5rem; color: #EDE9F0; margin: 0 0 1.25rem; }
+  .chooser, .shared { margin-top: 4rem; padding-top: 3rem; border-top: 1px solid #1A1C23; }
+  .chooser-list { margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  .chooser-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; background: #111317; border: 1px solid #1A1C23; padding: 1rem 1.25rem; border-radius: 0.25rem; }
+  .chooser-row dt { color: #EDE9F0; font-size: 0.9375rem; }
+  .chooser-row dd { margin: 0; color: #C9A96E; font-size: 0.8125rem; line-height: 1.5; }
+  .shared-list { list-style: none; padding: 0; margin: 0 0 1.25rem; display: flex; flex-wrap: wrap; gap: 0.6rem; font-size: 0.75rem; color: #D4D4D8; }
+  .shared-list li { background: #111317; border: 1px solid #1A1C23; padding: 0.4rem 0.75rem; border-radius: 0.25rem; }
+  .shared-note { font-size: 0.9rem; margin: 0; }
+  .platform-cta { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; }
+  .cta-primary { background: #C9A96E; color: #0D0E11; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-weight: bold; font-size: 0.8125rem; }
+  .cta-secondary { background: transparent; color: #EDE9F0; border: 1px solid #1A1C23; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8125rem; }
+  .cta-primary:focus-visible, .cta-secondary:focus-visible, .shared-note a:focus-visible { outline: 2px solid #C9A96E; outline-offset: 3px; }
+  .tag-mono { font-family: 'Fira Code', monospace; }
+  .text-muted { color: #888; }
+  @media (max-width: 768px) {
+    .page-heading { font-size: 2rem; }
+    .chooser-row { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+    .cta-primary, .cta-secondary { width: 100%; text-align: center; box-sizing: border-box; }
+  }
+</style>
