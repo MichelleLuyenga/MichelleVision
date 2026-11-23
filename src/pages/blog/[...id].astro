@@ -1,0 +1,342 @@
+---
+// src/pages/blog/[id].astro
+// Works with the original schema: `topics` is a string, `tags` and `draft` are optional.
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ogPost } from '../../lib/og';
+import { slugify } from '../../lib/slugify';
+
+interface Props {
+  entry: CollectionEntry<'blog'>;
+  prevPost: CollectionEntry<'blog'> | null;
+  nextPost: CollectionEntry<'blog'> | null;
+  relatedPosts: CollectionEntry<'blog'>[];
+}
+
+export async function getStaticPaths() {
+  const RELATED_COUNT = 3;
+
+  // Drafts are hidden in production builds but visible in `astro dev`.
+  const blogEntries = await getCollection('blog', ({ data }) =>
+    import.meta.env.PROD ? data.draft !== true : true
+  );
+  const sorted = blogEntries.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+  return sorted.map((entry, index) => {
+    const entryTags = entry.data.tags ?? [];
+
+    // Rank the other posts: same category counts most, each shared tag adds
+    // to the score, and ties go to the newest post (sorted is newest first).
+    const relatedPosts = sorted
+      .filter((p) => p.id !== entry.id)
+      .map((p) => {
+        const sharedTags = (p.data.tags ?? []).filter((t) => entryTags.includes(t)).length;
+        const score = (p.data.topics === entry.data.topics ? 3 : 0) + sharedTags * 2;
+        return { post: p, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, RELATED_COUNT)
+      .map((r) => r.post);
+
+    return {
+      params: { id: entry.id },
+      props: {
+        entry,
+        // Older post (published before this one)
+        prevPost: sorted[index + 1] ?? null,
+        // Newer post (published after this one)
+        nextPost: index > 0 ? sorted[index - 1] : null,
+        relatedPosts,
+      },
+    };
+  });
+}
+
+const { entry, prevPost, nextPost, relatedPosts } = Astro.props as Props;
+
+// Processes the markdown and exposes frontmatter added by plugins (reading time)
+const { Content, remarkPluginFrontmatter } = await render(entry);
+const readingTime = remarkPluginFrontmatter?.readingTime || '1 min read';
+
+// timeZone: 'UTC' stops dates from shifting a day for visitors in other time zones.
+const formatDate = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' });
+
+const tags = entry.data.tags ?? [];
+const socialImage = ogPost(entry.id);
+---
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  image={socialImage}
+  type="article"
+  publishedTime={entry.data.pubDate}
+  modifiedTime={entry.data.updatedDate}
+  tags={[entry.data.topics, ...tags]}
+>
+  <div class="post-container">
+    <a href="/blog" class="back-link tag-mono">&larr; ALL_LOGS</a>
+
+    <div class="post-layout">
+      <div class="post-main">
+        <header class="post-header">
+          <h1>{entry.data.title}</h1>
+
+          <div class="post-meta tag-mono text-muted">
+            <span>DATE: <time datetime={entry.data.pubDate.toISOString()}>{formatDate(entry.data.pubDate)}</time></span>
+            {entry.data.updatedDate && (
+              <span class="meta-updated">// UPDATED: <time datetime={entry.data.updatedDate.toISOString()}>{formatDate(entry.data.updatedDate)}</time></span>
+            )}
+            <span class="meta-accent">// {readingTime.toUpperCase()}</span>
+            <span>
+              // CATEGORY:
+              <a href={`/blog/topic/${slugify(entry.data.topics)}`} class="meta-link">{entry.data.topics.toUpperCase()}</a>
+            </span>
+          </div>
+
+          {tags.length > 0 && (
+            <ul class="post-tags tag-mono" aria-label="Tags">
+              {tags.map((tag) => (
+                <li>
+                  <a href={`/blog?q=${encodeURIComponent(tag)}`} class="tag-chip" title={`Search the blog for ${tag}`}>#{tag}</a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </header>
+
+        <article class="markdown-body">
+          <Content />
+        </article>
+
+        {(prevPost || nextPost) && (
+          <nav class="post-nav tag-mono" aria-label="More posts">
+            <a
+              class={`post-nav-link prev ${!prevPost ? 'is-disabled' : ''}`}
+              href={prevPost ? `/blog/${prevPost.id}` : undefined}
+              aria-disabled={!prevPost}
+              tabindex={prevPost ? undefined : -1}
+            >
+              <span class="post-nav-label">&larr; OLDER</span>
+              {prevPost && <span class="post-nav-title">{prevPost.data.title}</span>}
+            </a>
+            <a
+              class={`post-nav-link next ${!nextPost ? 'is-disabled' : ''}`}
+              href={nextPost ? `/blog/${nextPost.id}` : undefined}
+              aria-disabled={!nextPost}
+              tabindex={nextPost ? undefined : -1}
+            >
+              <span class="post-nav-label">NEWER &rarr;</span>
+              {nextPost && <span class="post-nav-title">{nextPost.data.title}</span>}
+            </a>
+          </nav>
+        )}
+
+        <div class="newsletter-box">
+          <p class="tag-mono newsletter-tag">// SUBSCRIPTION_PIPELINE</p>
+          <h3>Subscribe to the Growth Logs</h3>
+          <p class="text-muted newsletter-copy">
+            Concise notes on web performance, technical SEO, analytics, and marketing integrations, delivered to your inbox.
+          </p>
+
+          <form id="newsletter-form" class="newsletter-form" data-action="https://formspree.io/f/<your-own-formspree-form-code>">
+            <label for="newsletter-email" class="sr-only">Email address</label>
+            <input
+              type="email"
+              id="newsletter-email"
+              name="email"
+              placeholder="you@company.com"
+              autocomplete="email"
+              required
+            />
+            <button type="submit" class="subscribe-btn">
+              <span class="btn-label">SUBSCRIBE &rarr;</span>
+            </button>
+          </form>
+
+          <p class="form-status tag-mono" role="status" aria-live="polite" hidden></p>
+        </div>
+      </div>
+
+      {relatedPosts.length > 0 && (
+        <aside class="related-posts" aria-labelledby="related-heading">
+          <h2 id="related-heading" class="related-title tag-mono">// RELATED_LOGS</h2>
+          <ul class="related-list">
+            {relatedPosts.map((post) => (
+              <li>
+                <a href={`/blog/${post.id}`} class="related-link">
+                  <span class="related-name">{post.data.title}</span>
+                  <span class="related-cat tag-mono">{post.data.topics.toUpperCase()}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .post-container { max-width: 80rem; margin: 4rem auto; padding: 0 1.5rem; overflow-x: hidden; }
+  .back-link { display: inline-block; color: #888; text-decoration: none; margin-bottom: 2rem; transition: color 0.15s; }
+  .back-link:hover { color: #C9A96E; }
+
+  .post-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 3rem; align-items: start; }
+  .post-main { min-width: 0; }
+
+  .post-header { margin-bottom: 2rem; overflow-wrap: break-word; }
+  .post-header h1 { margin: 0 0 0.75rem 0; color: #EDE9F0; font-size: 2.25rem; line-height: 1.2; overflow-wrap: break-word; }
+  .post-meta { font-size: 0.8125rem; display: flex; gap: 0.5rem 1.5rem; flex-wrap: wrap; }
+  .post-meta span { overflow-wrap: anywhere; min-width: 0; }
+  .meta-updated { color: #EDE9F0; }
+  .meta-accent { color: #C9A96E; }
+  .meta-link { color: #C9A96E; text-decoration: none; margin-left: 0.25rem; }
+  .meta-link:hover { text-decoration: underline; }
+
+  .post-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; padding: 0; }
+  .tag-chip { display: inline-block; font-size: 0.75rem; color: #888; background: #111317; border: 1px solid #1A1C23; padding: 0.25rem 0.65rem; border-radius: 0.25rem; text-decoration: none; transition: color 0.15s, border-color 0.15s; }
+  .tag-chip:hover { color: #C9A96E; border-color: #C9A96E; }
+
+  .markdown-body { max-width: 42rem; overflow-wrap: break-word; }
+
+  .post-nav { max-width: 42rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; margin: 3rem 0; border-top: 1px solid #1A1C23; border-bottom: 1px solid #1A1C23; padding: 1.5rem 0; font-size: 0.8125rem; }
+  .post-nav-link { display: flex; flex-direction: column; gap: 0.35rem; text-decoration: none; color: #EDE9F0; padding: 0.5rem; border-radius: 0.25rem; transition: background 0.15s; min-width: 0; overflow-wrap: break-word; }
+  .post-nav-link:hover { background: rgba(201, 169, 110, 0.05); }
+  .post-nav-link.next { text-align: right; align-items: flex-end; }
+  .post-nav-link.is-disabled { visibility: hidden; pointer-events: none; }
+  .post-nav-label { color: #C9A96E; }
+  .post-nav-title { color: #888; font-family: system-ui, sans-serif; font-size: 0.875rem; }
+
+  .related-posts { min-width: 0; }
+  .related-title { color: #C9A96E; font-size: 0.8125rem; font-weight: normal; margin: 0 0 1rem; }
+  .related-list { list-style: none; margin: 0; padding: 0; border: 1px solid #1A1C23; border-radius: 0.25rem; background: #090A0C; }
+  .related-list li { border-bottom: 1px solid #1A1C23; }
+  .related-list li:last-child { border-bottom: none; }
+  .related-link { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 1.25rem; text-decoration: none; transition: background 0.15s; }
+  .related-link:hover { background: rgba(201, 169, 110, 0.04); }
+  .related-name { color: #EDE9F0; font-size: 0.95rem; line-height: 1.4; overflow-wrap: break-word; }
+  .related-link:hover .related-name { color: #C9A96E; }
+  .related-cat { color: #888; font-size: 0.7rem; }
+
+  .newsletter-box { margin-top: 4rem; padding: 2rem; background: #111317; border: 1px solid #1A1C23; border-radius: 0.375rem; max-width: 42rem; }
+  .newsletter-tag { color: #C9A96E; margin: 0 0 0.5rem 0; }
+  .newsletter-box h3 { color: #EDE9F0; margin: 0 0 0.75rem 0; font-size: 1.25rem; }
+  .newsletter-copy { font-size: 0.875rem; margin: 0 0 1.5rem 0; line-height: 1.5; }
+
+  .newsletter-form { display: flex; gap: 0.75rem; flex-wrap: wrap; min-width: 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  #newsletter-email { flex: 1 1 240px; min-width: 0; background: #000; border: 1px solid #1A1C23; padding: 0.75rem; color: #EDE9F0; font-family: inherit; border-radius: 0.25rem; }
+  #newsletter-email:focus-visible { outline: 2px solid #C9A96E; outline-offset: 2px; }
+
+  .subscribe-btn {
+    background: transparent;
+    border: 1px solid #C9A96E;
+    color: #C9A96E;
+    padding: 0.75rem 1.5rem;
+    font-family: 'Fira Code', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 0.25rem;
+  }
+  .subscribe-btn:hover { background: rgba(201, 169, 110, 0.1); }
+  .subscribe-btn:focus-visible, .tag-chip:focus-visible, .related-link:focus-visible,
+  .post-nav-link:focus-visible, .meta-link:focus-visible, .back-link:focus-visible { outline: 2px solid #C9A96E; outline-offset: 2px; }
+  .subscribe-btn:disabled { opacity: 0.6; cursor: default; }
+
+  .form-status { margin-top: 1rem; font-size: 0.875rem; }
+  .form-status.is-success { color: #C9A96E; }
+  .form-status.is-error { color: #ff5555; }
+  .text-muted { color: #888; }
+
+  @media (max-width: 1024px) {
+    .post-layout { grid-template-columns: minmax(0, 1fr); }
+    .related-posts { margin-top: 1rem; }
+  }
+
+  @media (min-width: 1025px) {
+    .related-posts { position: sticky; top: 2rem; }
+  }
+
+  @media (max-width: 768px) {
+    .post-container { margin: 2rem auto; padding: 0 1.25rem; }
+    .post-header h1 { font-size: 1.6rem; }
+    .post-nav { grid-template-columns: minmax(0, 1fr); }
+    .post-nav-link.next { text-align: left; align-items: flex-start; }
+    .newsletter-box { padding: 1.5rem; }
+    .newsletter-form { flex-direction: column; }
+    #newsletter-email { min-width: 0; }
+    .subscribe-btn { width: 100%; }
+  }
+
+  @media (max-width: 420px) {
+    .post-container { padding: 0 1rem; }
+    .newsletter-box { padding: 1.25rem; }
+  }
+</style>
+
+<style is:global>
+  .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 { color: #EDE9F0; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; line-height: 1.3; }
+  .markdown-body p { margin-bottom: 1.25rem; line-height: 1.6; color: #D4D4D8; }
+  .markdown-body strong { color: #C9A96E; }
+  .markdown-body a { color: #C9A96E; text-decoration: underline; text-underline-offset: 0.15em; overflow-wrap: anywhere; }
+  .markdown-body a:hover { color: #EDE9F0; }
+  .markdown-body ul, .markdown-body ol { margin: 0 0 1.25rem 0; padding-left: 1.5rem; line-height: 1.6; color: #D4D4D8; }
+  .markdown-body li { margin-bottom: 0.5rem; overflow-wrap: break-word; }
+  .markdown-body blockquote { margin: 1.5rem 0; padding: 0.25rem 0 0.25rem 1rem; border-left: 3px solid #C9A96E; color: #888; font-style: italic; }
+  .markdown-body img { max-width: 100%; height: auto; border-radius: 0.375rem; border: 1px solid #1A1C23; margin: 1.5rem 0; display: block; }
+  .markdown-body figcaption { color: #888; font-size: 0.8125rem; text-align: center; margin-top: 0.5rem; }
+  .markdown-body hr { border: none; border-top: 1px solid #1A1C23; margin: 2rem 0; }
+  /* Wide tables scroll within their own box instead of stretching the page */
+  .markdown-body table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.875rem; }
+  .markdown-body th, .markdown-body td { border: 1px solid #1A1C23; padding: 0.5rem 0.75rem; text-align: left; }
+  .markdown-body th { background: #111317; color: #EDE9F0; }
+  .markdown-body pre { background-color: #111317; border: 1px solid #1A1C23; padding: 1.25rem; border-radius: 0.375rem; overflow-x: auto; margin: 1.5rem 0; }
+  .markdown-body code { font-family: 'Fira Code', monospace; font-size: 0.875rem; }
+  .markdown-body :not(pre) > code { background: #111317; color: #C9A96E; padding: 0.15rem 0.4rem; border-radius: 0.25rem; }
+</style>
+
+<script>
+  const form = document.querySelector('#newsletter-form') as HTMLFormElement | null;
+  const status = document.querySelector('.form-status') as HTMLParagraphElement | null;
+  const button = form?.querySelector('.subscribe-btn') as HTMLButtonElement | null;
+  const buttonLabel = button?.querySelector('.btn-label') as HTMLSpanElement | null;
+
+  if (form && status && button && buttonLabel) {
+    const action = form.dataset.action;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!action) return;
+
+      button.disabled = true;
+      buttonLabel.textContent = 'SENDING...';
+      status.hidden = true;
+
+      try {
+        const response = await fetch(action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) throw new Error('Request failed');
+
+        form.reset();
+        status.textContent = '// SUCCESS: EMAIL_ADDED_TO_STREAM_QUEUE';
+        status.classList.remove('is-error');
+        status.classList.add('is-success');
+      } catch {
+        status.textContent = '// ERROR: SUBMISSION_FAILED. PLEASE_TRY_AGAIN';
+        status.classList.remove('is-success');
+        status.classList.add('is-error');
+      } finally {
+        status.hidden = false;
+        button.disabled = false;
+        buttonLabel.textContent = 'SUBSCRIBE →';
+      }
+    });
+  }
+</script>
