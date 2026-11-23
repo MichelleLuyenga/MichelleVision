@@ -1,0 +1,424 @@
+---
+// src/pages/blog.astro (adjust the filename to match where your current blog index lives)
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { slugify } from '../lib/slugify';
+import { getCollection } from 'astro:content';
+import { ogHome } from '../lib/og';
+
+// 1. Pull all posts from src/content/blog/
+const allBlogPosts = await getCollection('blog');
+
+// 2. Newest first. Copy before sorting so the original array isn't mutated.
+const posts = [...allBlogPosts].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// 3. Categories with post counts, sorted alphabetically.
+const categoryCounts = new Map<string, number>();
+for (const post of posts) {
+  const key = post.data.topics.toUpperCase();
+  categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
+}
+const categories = [
+  { name: 'ALL', count: posts.length },
+  ...[...categoryCounts.keys()].sort().map((name) => ({ name, count: categoryCounts.get(name) ?? 0 })),
+];
+
+// 4. Paging configuration (read by the client script via data attributes).
+const INITIAL_VISIBLE_COUNT = 15;
+const LOAD_MORE_INCREMENT = 20;
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+const pageTitle = 'MarTech, Web Growth & Integration Logs | MichelleVision';
+const pageDescription =
+  'Technical deep-dives into Core Web Vitals, technical SEO, analytics attribution, CDP and CRM integration, marketing automation, and AI workflow pipelines.';
+
+// 5. Structured data: a CollectionPage listing the latest posts.
+const site = Astro.site ?? new URL(Astro.url.origin);
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: pageTitle,
+  description: pageDescription,
+  url: new URL(Astro.url.pathname, site).toString(),
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: posts.slice(0, INITIAL_VISIBLE_COUNT).map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: new URL(`/blog/${post.id}`, site).toString(),
+      name: post.data.title,
+    })),
+  },
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} image={ogHome()}>
+  <!-- BaseLayout already provides <main>, so this wrapper is a plain div -->
+  <div
+    class="blog-feed-container"
+    data-initial-count={INITIAL_VISIBLE_COUNT}
+    data-load-increment={LOAD_MORE_INCREMENT}
+  >
+    <header class="feed-header">
+      <p class="tag-mono">// MARTECH_ENGINEERING // GROWTH_LOGS</p>
+      <h1>Web Engineering, MarTech & Growth Logs</h1>
+      <p class="feed-description text-muted">
+        Technical deep-dives into Core Web Vitals, server-side analytics, CDP and CRM integration, e-commerce, marketing automation, technical SEO, and building automated lead pipelines.
+      </p>
+    </header>
+
+    <section class="control-panel" aria-label="Search and filter posts">
+      <div class="search-wrapper">
+        <span class="search-icon tag-mono" aria-hidden="true">[QUERY]:</span>
+        <label for="feed-search" class="sr-only">Search posts by title, description, or topic</label>
+        <input
+          type="search"
+          id="feed-search"
+          name="q"
+          placeholder="Search logs by keyword..."
+          autocomplete="off"
+        />
+      </div>
+
+      <button
+        id="filter-trigger"
+        class="tag-mono"
+        aria-expanded="false"
+        aria-controls="filter-wrapper"
+      >
+        [ FILTER_STREAMS<span id="trigger-active"></span> <span id="trigger-state" aria-hidden="true">+</span> ]
+      </button>
+
+      <div id="filter-wrapper" class="filter-wrapper">
+        <div class="filter-inner" role="group" aria-label="Filter posts by category">
+          {categories.map((cat, idx) => (
+            <button
+              type="button"
+              class={`filter-btn tag-mono ${idx === 0 ? 'active' : ''}`}
+              data-category={cat.name}
+              aria-pressed={idx === 0 ? 'true' : 'false'}
+            >
+              [ {cat.name} · {cat.count} ]
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <p id="feed-status" class="feed-status tag-mono" role="status" aria-live="polite"></p>
+
+    <section class="ticker-feed" aria-label="Blog posts">
+      <div class="feed-table-header tag-mono" aria-hidden="true">
+        <span class="col-title">GROWTH_LOG_HEADER</span>
+        <span class="col-date">LOGGED_AT</span>
+        <span class="col-cat">TOPIC_DOMAIN</span>
+      </div>
+
+      <div class="feed-rows" id="blog-rows">
+        {posts.map((post) => (
+          <article
+            class="feed-row"
+            data-post-category={post.data.topics.toUpperCase()}
+            data-post-search={`${post.data.title} ${post.data.description ?? ''} ${post.data.topics}`.toLowerCase()}
+          >
+            <div class="row-main">
+              <a href={`/blog/${post.id}`} class="row-title">
+                {post.data.title}
+              </a>
+              {post.data.description && (
+                <p class="row-description text-muted">{post.data.description}</p>
+              )}
+            </div>
+            <time class="row-date tag-mono" datetime={post.data.pubDate.toISOString()}>
+              {dateFormatter.format(post.data.pubDate)}
+            </time>
+            <a href={`/blog/topic/${slugify(post.data.topics)}`} class="row-category tag-mono">
+              {post.data.topics.toUpperCase()}
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <div id="empty-feed-notice" class="empty-notice" hidden>
+        <p class="tag-mono empty-text">// WARNING: NO_LOGS_MATCH_CURRENT_QUERY_PARAMETERS</p>
+        <button type="button" id="clear-filters" class="tag-mono load-btn">[ CLEAR_FILTERS ]</button>
+      </div>
+
+      <div id="load-more-container" class="load-more-container" hidden>
+        <button type="button" id="load-more-btn" class="tag-mono load-btn">
+          [ RUN_ROUTINE: LOAD_MORE_RECORDS ]
+        </button>
+      </div>
+    </section>
+
+    <aside class="blog-cta" aria-labelledby="blog-cta-heading">
+      <p class="tag-mono">// NEED_THIS_IMPLEMENTED?</p>
+      <h2 id="blog-cta-heading">Want this wired into your own stack?</h2>
+      <p class="text-muted">
+        I build and connect Astro and Next.js sites to e-commerce, CMS, CDP, CRM, analytics, automation, and ad platforms, in fixed-scope packages.
+      </p>
+      <div class="cta-actions">
+        <a href="/services" class="cta-primary tag-mono">VIEW_SERVICES &rarr;</a>
+        <a href="/contact?stream=consultation" class="cta-secondary tag-mono">SCOPE_A_PROJECT</a>
+      </div>
+    </aside>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+</BaseLayout>
+
+<style>
+  .blog-feed-container { max-width: 80rem; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif; overflow-x: hidden; }
+  .feed-header h1 { font-size: 2.25rem; color: #EDE9F0; margin: 0.5rem 0 1rem 0; }
+  .feed-description { max-width: 42rem; font-size: 0.95rem; line-height: 1.6; margin-bottom: 3rem; }
+  .control-panel { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #1A1C23; padding-bottom: 1.5rem; }
+  .search-wrapper { display: flex; align-items: center; background: #111317; border: 1px solid #1A1C23; padding: 0 1rem; border-radius: 0.25rem; min-width: 0; }
+  .search-wrapper:focus-within { border-color: #C9A96E; }
+  .search-icon { margin-right: 0.5rem; white-space: nowrap; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  #feed-search { width: 100%; min-width: 0; background: transparent; border: none; padding: 0.85rem 0; color: #EDE9F0; font-family: inherit; font-size: 0.9375rem; -webkit-appearance: none; appearance: none; }
+  #feed-search:focus { outline: none; }
+  #filter-trigger { display: block; align-self: flex-start; background: #111317; border: 1px solid #1A1C23; color: #C9A96E; padding: 0.75rem 1rem; min-height: 2.75rem; cursor: pointer; text-align: left; }
+  #filter-trigger:hover { border-color: #C9A96E; }
+  #filter-trigger[aria-expanded="true"] { border-color: #C9A96E; }
+  .filter-wrapper { display: none; background: #111317; border: 1px solid #1A1C23; padding: 1rem; border-radius: 0.25rem; }
+  .filter-wrapper.open { display: block; }
+  .filter-inner { display: flex; flex-wrap: wrap; gap: 0.75rem; min-width: 0; }
+  .filter-btn { background: transparent; border: none; color: #888; cursor: pointer; padding: 0.25rem 0.5rem; transition: color 0.2s; overflow-wrap: anywhere; max-width: 100%; }
+  .filter-btn:hover, .filter-btn.active { color: #C9A96E; }
+  .filter-btn:focus-visible, .load-btn:focus-visible, .row-title:focus-visible, #filter-trigger:focus-visible,
+  .cta-primary:focus-visible, .cta-secondary:focus-visible { outline: 2px solid #C9A96E; outline-offset: 2px; }
+  .feed-status { margin: 0 0 1rem 0; min-height: 1.25rem; font-size: 0.75rem; color: #888; }
+  .ticker-feed { border: 1px solid #1A1C23; background: #090A0C; border-radius: 0.25rem; overflow: hidden; }
+  .feed-table-header { display: grid; grid-template-columns: 1fr 140px 160px; gap: 1rem; padding: 0.75rem 1.5rem; background: #111317; border-bottom: 1px solid #1A1C23; font-size: 0.75rem; color: #8A8A93; }
+  .feed-table-header span { color: inherit; }
+  .feed-row { display: grid; grid-template-columns: minmax(0, 1fr) 140px 160px; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid #1A1C23; align-items: center; transition: background 0.15s; }
+  .feed-row.is-hidden { display: none; }
+  .feed-rows { display: flex; flex-direction: column; }
+  .feed-row:last-child { border-bottom: none; }
+  .feed-row:hover { background: rgba(201, 169, 110, 0.02); }
+  .row-main { min-width: 0; }
+  .row-title { color: #EDE9F0; text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: color 0.15s; overflow-wrap: break-word; }
+  .row-title:hover { color: #C9A96E; }
+  .row-description { font-size: 0.8125rem; margin: 0.35rem 0 0 0; line-height: 1.5; overflow-wrap: break-word; }
+  .row-date { color: #888; font-size: 0.75rem; }
+  .row-category { color: #C9A96E; font-size: 0.75rem; text-align: right; overflow-wrap: anywhere; text-decoration: none; transition: color 0.15s; }
+  .row-category:hover { color: #EDE9F0; text-decoration: underline; }
+  .row-category:focus-visible { outline: 2px solid #C9A96E; outline-offset: 2px; }
+  .empty-notice { padding: 3rem 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+  .empty-notice[hidden] { display: none; }
+  .empty-text { color: #ff5555; font-size: 0.875rem; margin: 0; }
+  .tag-mono { font-family: 'Fira Code', monospace; color: #C9A96E; font-size: 0.8125rem; overflow-wrap: anywhere; }
+  .text-muted { color: #888; }
+
+  .load-more-container { text-align: center; padding: 2rem; border-top: 1px solid #1A1C23; background: #090A0C; }
+  .load-more-container[hidden] { display: none; }
+  .load-btn { background: transparent; border: 1px solid #1A1C23; padding: 0.75rem 2rem; cursor: pointer; color: #EDE9F0; transition: all 0.2s; font-size: 0.8125rem; }
+  .load-btn:hover { border-color: #C9A96E; color: #C9A96E; background: #111317; }
+
+  .blog-cta { margin-top: 4rem; background: #111317; border: 1px solid #1A1C23; border-radius: 0.375rem; padding: 2.5rem; }
+  .blog-cta h2 { font-size: 1.5rem; color: #EDE9F0; margin: 0.5rem 0 0.75rem; }
+  .blog-cta p.text-muted { max-width: 40rem; font-size: 0.95rem; line-height: 1.6; margin: 0 0 1.5rem; }
+  .cta-actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .cta-primary { background: #C9A96E; color: #0D0E11; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-weight: bold; font-size: 0.8125rem; }
+  .cta-secondary { background: transparent; color: #EDE9F0; border: 1px solid #1A1C23; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8125rem; }
+  .cta-secondary:hover { border-color: #C9A96E; }
+
+  @media (max-width: 768px) {
+    .blog-feed-container { margin: 2rem auto; padding: 0 1.25rem; }
+    .feed-header h1 { font-size: 1.75rem; }
+    .feed-description { margin-bottom: 2rem; }
+    #filter-trigger { width: 100%; }
+    .filter-inner { flex-direction: column; gap: 0.25rem; }
+    .filter-btn { text-align: left; padding: 0.5rem 0; width: 100%; min-height: 2.75rem; }
+    .feed-table-header { display: none; }
+    .feed-row { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; padding: 1.25rem 1rem; }
+    .row-title { font-size: 1rem; line-height: 1.4; display: block; }
+    .row-date { order: 3; margin-top: 0.35rem; }
+    .row-category { text-align: left; margin-top: 0.25rem; }
+    .load-btn { width: 100%; padding: 1rem; }
+    .blog-cta { padding: 1.5rem; }
+    .cta-primary, .cta-secondary { width: 100%; text-align: center; box-sizing: border-box; }
+  }
+
+  @media (max-width: 420px) {
+    .blog-feed-container { padding: 0 1rem; }
+    .search-wrapper { padding: 0 0.75rem; }
+    .feed-row { padding: 1rem 0.75rem; }
+  }
+
+  @media (min-width: 1600px) {
+    .blog-feed-container { max-width: 96rem; }
+  }
+</style>
+
+<script>
+  // Bundled module script: it runs once per page lifetime, so it is safe with
+  // client-side navigation. A marker on the container keeps init idempotent.
+  function initFeedEngine() {
+    const container = document.querySelector<HTMLElement>('.blog-feed-container');
+    if (!container || container.dataset.feedReady === 'true') return;
+
+    const searchInput = container.querySelector<HTMLInputElement>('#feed-search');
+    const filterButtons = Array.from(container.querySelectorAll<HTMLButtonElement>('.filter-btn'));
+    const rows = Array.from(container.querySelectorAll<HTMLElement>('.feed-row'));
+    const emptyNotice = container.querySelector<HTMLElement>('#empty-feed-notice');
+    const clearButton = container.querySelector<HTMLButtonElement>('#clear-filters');
+    const statusLine = container.querySelector<HTMLElement>('#feed-status');
+    const filterTrigger = container.querySelector<HTMLButtonElement>('#filter-trigger');
+    const filterWrapper = container.querySelector<HTMLElement>('#filter-wrapper');
+    const triggerState = container.querySelector<HTMLElement>('#trigger-state');
+    const triggerActive = container.querySelector<HTMLElement>('#trigger-active');
+    const loadMoreBtn = container.querySelector<HTMLButtonElement>('#load-more-btn');
+    const loadMoreContainer = container.querySelector<HTMLElement>('#load-more-container');
+
+    if (!searchInput || !rows.length || !emptyNotice || !statusLine) return;
+    container.dataset.feedReady = 'true';
+
+    const initialCount = Number(container.dataset.initialCount) || 15;
+    const increment = Number(container.dataset.loadIncrement) || 20;
+
+    // Restore state from the URL (?topic=...&q=...) so filtered views can be shared.
+    const params = new URLSearchParams(window.location.search);
+    const validCategories = new Set(filterButtons.map((b) => b.dataset.category ?? 'ALL'));
+    let activeCategory = (params.get('topic') ?? 'ALL').toUpperCase();
+    if (!validCategories.has(activeCategory)) activeCategory = 'ALL';
+    let searchQuery = (params.get('q') ?? '').toLowerCase().trim();
+    let visibleLimit = initialCount;
+    searchInput.value = params.get('q') ?? '';
+
+    function setActiveButton(category: string) {
+      filterButtons.forEach((btn) => {
+        const isActive = btn.dataset.category === category;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+      });
+      if (triggerActive) triggerActive.textContent = category !== 'ALL' ? `: ${category}` : '';
+    }
+
+    function syncUrl() {
+      const next = new URLSearchParams();
+      if (activeCategory !== 'ALL') next.set('topic', activeCategory);
+      if (searchQuery) next.set('q', searchQuery);
+      const qs = next.toString();
+      history.replaceState(
+        history.state,
+        '',
+        `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`
+      );
+    }
+
+    function setFiltersOpen(isOpen: boolean) {
+      if (!filterWrapper) return;
+      filterWrapper.classList.toggle('open', isOpen);
+      if (triggerState) triggerState.textContent = isOpen ? '−' : '+';
+      filterTrigger?.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    // On phones the panel closes after a choice; on larger screens it stays
+    // open so several topics can be compared quickly.
+    function closeFiltersOnMobile() {
+      if (window.matchMedia('(max-width: 768px)').matches) setFiltersOpen(false);
+    }
+
+    // Applies filters and paging; returns the matching rows in order.
+    function evaluateFeed(): HTMLElement[] {
+      const matchingRows: HTMLElement[] = [];
+
+      rows.forEach((row) => {
+        const matchesCategory = activeCategory === 'ALL' || row.dataset.postCategory === activeCategory;
+        const matchesSearch = !searchQuery || (row.dataset.postSearch ?? '').includes(searchQuery);
+
+        if (matchesCategory && matchesSearch) {
+          matchingRows.push(row);
+          row.classList.toggle('is-hidden', matchingRows.length > visibleLimit);
+        } else {
+          row.classList.add('is-hidden');
+        }
+      });
+
+      const total = matchingRows.length;
+      const shown = Math.min(total, visibleLimit);
+      const remaining = total - shown;
+
+      emptyNotice!.hidden = total !== 0;
+      statusLine!.textContent =
+        total === 0
+          ? ''
+          : `Showing ${shown} of ${total} ${total === 1 ? 'log' : 'logs'}${activeCategory !== 'ALL' ? ` in ${activeCategory}` : ''}`;
+
+      if (loadMoreContainer) loadMoreContainer.hidden = remaining <= 0;
+      if (loadMoreBtn) loadMoreBtn.textContent = `[ RUN_ROUTINE: LOAD_MORE_RECORDS · ${remaining} REMAINING ]`;
+
+      return matchingRows;
+    }
+
+    if (filterTrigger && filterWrapper) {
+      filterTrigger.addEventListener('click', () => {
+        setFiltersOpen(!filterWrapper.classList.contains('open'));
+      });
+      // Escape closes the panel and returns focus to the toggle.
+      container.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && filterWrapper.classList.contains('open')) {
+          setFiltersOpen(false);
+          filterTrigger.focus();
+        }
+      });
+    }
+
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        const previouslyShown = Math.min(
+          rows.filter((r) => !r.classList.contains('is-hidden')).length,
+          visibleLimit
+        );
+        visibleLimit += increment;
+        const matchingRows = evaluateFeed();
+        // Move focus to the first newly revealed post so keyboard users keep their place.
+        matchingRows[previouslyShown]?.querySelector<HTMLAnchorElement>('.row-title')?.focus();
+      });
+    }
+
+    // Debounce so fast typing doesn't re-filter on every keystroke.
+    let debounceHandle: number | undefined;
+    searchInput.addEventListener('input', () => {
+      window.clearTimeout(debounceHandle);
+      const value = searchInput.value;
+      debounceHandle = window.setTimeout(() => {
+        searchQuery = value.toLowerCase().trim();
+        visibleLimit = initialCount;
+        evaluateFeed();
+        syncUrl();
+      }, 150);
+    });
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.category ?? 'ALL';
+        setActiveButton(activeCategory);
+        visibleLimit = initialCount;
+        evaluateFeed();
+        syncUrl();
+        closeFiltersOnMobile();
+      });
+    });
+
+    clearButton?.addEventListener('click', () => {
+      activeCategory = 'ALL';
+      searchQuery = '';
+      searchInput.value = '';
+      visibleLimit = initialCount;
+      setActiveButton('ALL');
+      evaluateFeed();
+      syncUrl();
+      searchInput.focus();
+    });
+
+    setActiveButton(activeCategory);
+    evaluateFeed();
+  }
+
+  initFeedEngine();
+  // Re-run after client-side navigations. The marker above prevents double binding.
+  document.addEventListener('astro:page-load', initFeedEngine);
+</script>
