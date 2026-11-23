@@ -1,0 +1,59 @@
+---
+// src/layouts/LegalLayout.astro
+// Shared wrapper for Privacy Policy, Terms of Service, and other legal pages.
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  docId: string;
+  heading: string;
+  updated: string;
+}
+
+const { title, description, docId, heading, updated } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="legal-container">
+    <div class="legal-header">
+      <p class="tag-mono alert-text">// LEGAL_DOCUMENT: {docId}</p>
+      <h1 class="legal-title">{heading}</h1>
+      <p class="text-muted legal-meta">Last updated: {updated}</p>
+    </div>
+
+    <div class="legal-body">
+      <slot />
+    </div>
+
+    <div class="back-link-box">
+      <a href="/" class="route-link"><span aria-hidden="true">&rarr;</span> RETURN_TO_HOME</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal-container { max-width: 48rem; margin: 6rem auto; padding: 0 1.5rem; text-align: left; }
+  .alert-text { color: #C9A96E; font-weight: bold; letter-spacing: 0.05em; }
+  .legal-title { font-size: 2.5rem; margin: 1rem 0 0.5rem 0; color: #EDE9F0; line-height: 1.2; }
+  .legal-meta { font-size: 0.875rem; margin-bottom: 3rem; }
+  .legal-body { background: #111317; border: 1px solid #1A1C23; padding: 3rem; border-radius: 0.375rem; color: #D4D4D8; line-height: 1.7; }
+  /* Slotted content comes from the page, so these rules must be :global */
+  .legal-body :global(h2) { color: #EDE9F0; font-size: 1.125rem; margin: 2.25rem 0 1rem; font-family: 'Fira Code', monospace; }
+  .legal-body :global(h2:first-child) { margin-top: 0; }
+  .legal-body :global(p), .legal-body :global(ul) { margin: 0 0 1.25rem; }
+  .legal-body :global(ul) { padding-left: 1.5rem; }
+  .legal-body :global(li) { margin-bottom: 0.5rem; }
+  .legal-body :global(a) { color: #C9A96E; text-decoration: underline; }
+  .legal-body :global(a:focus-visible), .route-link:focus-visible { outline: 2px solid #C9A96E; outline-offset: 3px; }
+  .back-link-box { margin-top: 2rem; }
+  .route-link { font-family: 'Fira Code', monospace; font-size: 0.9375rem; color: #C9A96E; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+  .route-link:hover { color: #EDE9F0; }
+  .tag-mono { font-family: 'Fira Code', monospace; font-size: 0.8125rem; }
+  .text-muted { color: #888; }
+  @media (max-width: 768px) {
+    .legal-container { margin: 3rem auto; }
+    .legal-body { padding: 1.5rem; }
+    .legal-title { font-size: 2rem; }
+  }
+</style>
