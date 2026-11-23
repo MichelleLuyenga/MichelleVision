@@ -1,0 +1,25 @@
+---
+const { frontmatter } = Astro.props;
+import BaseLayout from './BaseLayout.astro';
+---
+<BaseLayout title={`${frontmatter.title} | MichelleVision Journal`}>
+  <article class="max-w-3xl mx-auto">
+    <!-- Header Details -->
+    <header class="mb-12 font-mono">
+      <div class="text-xs text-[#C9A96E] mb-2 tracking-widest">// ENGINE_LOG: {frontmatter.id}</div>
+      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-[#EDE9F0] mb-4 font-sans">{frontmatter.title}</h1>
+      <div class="text-xs text-[#9CA3AF] flex gap-4">
+        <span>DATE: {frontmatter.date}</span>
+        <span>CATEGORY: {frontmatter.category}</span>
+      </div>
+    </header>
+
+    <!-- Body text container with explicit prose overrides -->
+    <div class="prose prose-invert max-w-none text-[#9CA3AF] font-light leading-relaxed space-y-6 
+                prose-headings:text-[#EDE9F0] prose-headings:font-semibold prose-headings:font-sans
+                prose-code:text-[#C9A96E] prose-code:font-mono prose-code:bg-[#111317] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-[#111317] prose-pre:border prose-pre:border-[#1A1C23] prose-pre:p-4 prose-pre:rounded-lg">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
