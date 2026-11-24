@@ -1,0 +1,46 @@
+# Michelle Sadsad Luyenga — Marketing Web Developer
+> Marketing web developer building fast, measurable websites on Astro and Next.js, and connecting them to e-commerce, CMS, CDP, CRM, analytics, marketing automation, advertising, and workflow tools. Open to client projects and full-time roles.
+
+## Platforms
+- Astro (flagship): new marketing sites and migrations where speed and SEO matter most
+- Next.js (when needed): headless storefronts, personalization, and app-like experiences
+- Platform guide: https://www.michellevision.com/platforms
+
+## Core Services & Packages
+- Legacy Migration & Integration (FROM $6,500): migrations to Astro or Next.js, ETL data pipelines, URL redirects, CRM/ERP data syncing, GA4 and tag manager setup, secure hosting.
+- Turnkey Design, Build & Scale (FROM $12,000): UI/UX design, site build on Astro or Next.js, CDP/CRM/marketing automation integration, analytics event planning, ad conversion tracking, launch QA and handoff.
+- Headless Commerce & Growth (FROM $8,500): headless storefronts, product feeds for Google and Meta, abandoned-cart and post-purchase automation, server-side purchase tracking, order and inventory workflow automation.
+- Single integrations and add-on modules, including headless WordPress with an Astro front end.
+
+## Integration Coverage
+- E-commerce: Shopify Storefront API, Stripe
+- CMS: Sanity, headless WordPress
+- CDP: Segment
+- CRM: HubSpot
+- Analytics & BI: GA4, Looker Studio
+- Marketing automation: HubSpot Marketing, Mailchimp
+- Advertising: Google Ads, Meta Conversions API, server-side Google Tag Manager
+- Marketing & SEO: structured data, sitemaps and RSS, UTM governance
+- Workflow integration: Make, Zapier
+- ERPs and internal company dashboards
+
+## Portfolio Case Studies (/cases)
+- Featured: How I designed MichelleVision (/cases/michellevision), covering goals, design system, key pages, and technical choices
+These are portfolio case studies showing approach, not client engagements:
+- Legacy CMS to headless Astro migration (audit, ETL, redirect planning)
+- Unified company dashboard and system integration (CRM, ERP, BI)
+
+## Sample Builds (in progress, launching Q1 2027)
+Two sample projects, one per platform, sharing the same tracking and CRM setup:
+- Astro: lead-gen marketing site
+- Next.js: headless storefront with CDP and server-side ad conversions
+
+## Blog and Learning Archive
+- Blog (https://www.michellevision.com/blog): curated notes in three categories: Web Performance & SEO, MarTech & Analytics, Web Development & Platforms
+- Learning archive (https://michelleluyenga.github.io/learning): older posts on other topics, kept as a record of learning history
+
+## Professional Links
+- Services: https://www.michellevision.com/services
+- Platform guide: https://www.michellevision.com/platforms
+- Case Studies & Sample Builds: https://www.michellevision.com/cases
+- Contact (client projects and hiring inquiries): https://www.michellevision.com/contact?stream=consultation
