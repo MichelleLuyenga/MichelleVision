@@ -1,16 +1,41 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
+# Dependabot keeps dependencies up to date by opening pull requests.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Dar_es_Salaam"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
     groups:
+      # Astro and its official integrations move together, so update them in one pull request.
       astro-updates:
         patterns:
           - "astro"
           - "@astrojs/*"
+      vercel-updates:
+        patterns:
+          - "@vercel/*"
+      # Everything else that is a dev tool and a minor or patch release.
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(ci)"
