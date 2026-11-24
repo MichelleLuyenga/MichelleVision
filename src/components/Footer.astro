@@ -1,0 +1,185 @@
+---
+// src/components/Footer.astro
+const currentYear = new Date().getFullYear();
+
+const links = [
+  { label: 'SERVICES', href: '/services' },
+  { label: 'PLATFORMS', href: '/platforms' },
+  { label: 'CASES', href: '/cases' },
+  { label: 'BLOG' , href: '/blog' },
+  { label: 'CONTACT', href: '/contact' },
+];
+
+const social = [
+  { label: 'GITHUB', href: 'https://github.com/michelleluyenga' },
+  { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/michelleluyenga' },
+];
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" class="brand-name tag-mono">MICHELLEVISION <span class="accent-slash">//</span></a>
+        <p class="text-muted footer-bio">
+          Marketing web developer. Fast, measurable websites on Astro and Next.js, connected to your CRM, analytics, and ad platforms.
+        </p>
+      </div>
+
+      <div class="footer-status tag-mono">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>OPEN_TO: PROJECTS &amp; ROLES</span>
+      </div>
+    </div>
+
+    <nav class="footer-middle tag-mono" aria-label="Footer">
+      <div class="footer-links">
+        {links.map((l) => <a href={l.href}>{l.label}</a>)}
+        {social.map((l) => (
+          <a href={l.href} target="_blank" rel="noopener noreferrer" aria-label={`${l.label.charAt(0)}${l.label.slice(1).toLowerCase()} (opens in a new tab)`}>
+            {l.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+
+    <div class="footer-bottom tag-mono">
+      <p class="copyright text-muted">
+        &copy; {currentYear} MICHELLEVISION. ALL RIGHTS RESERVED.
+      </p>
+      <div class="legal-links">
+        <a href="/privacy">PRIVACY_POLICY</a>
+        <a href="/terms">TERMS_OF_SERVICE</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid #1A1C23;
+    background: #090A0C;
+    margin-top: 5rem;
+    padding: 3rem 0;
+    width: 100%;
+  }
+
+  .footer-inner {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+  }
+
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .brand-name {
+    color: #EDE9F0;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .accent-slash { color: #C9A96E; }
+
+  .footer-bio {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0.5rem 0 0 0;
+    max-width: 28rem;
+    font-family: system-ui, sans-serif;
+  }
+
+  .footer-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #C9A96E;
+    background: rgba(201, 169, 110, 0.05);
+    border: 1px solid #1A1C23;
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.25rem;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #10B981;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #10B981;
+  }
+
+  .footer-middle {
+    border-top: 1px solid #1A1C23;
+    padding: 1.25rem 0;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 0.75rem 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+  }
+
+  .footer-links a {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-links a:hover { color: #C9A96E; }
+
+  .footer-bottom {
+    border-top: 1px solid #1A1C23;
+    padding-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.75rem;
+  }
+
+  .legal-links { display: flex; gap: 1.5rem; }
+
+  .legal-links a {
+    color: #8A8A93;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .legal-links a:hover { color: #EDE9F0; }
+
+  .brand-name:focus-visible,
+  .footer-links a:focus-visible,
+  .legal-links a:focus-visible {
+    outline: 2px solid #C9A96E;
+    outline-offset: 3px;
+  }
+
+  .copyright {
+    font-size: 0.75rem;
+    margin: 0;
+    font-family: 'Fira Code', monospace;
+  }
+
+  .tag-mono { font-family: 'Fira Code', monospace; }
+  .text-muted { color: #888; }
+
+  /* Mobile Responsive Adjustments */
+  @media (max-width: 640px) {
+    .site-footer { margin-top: 3rem; padding: 2rem 0; }
+    .footer-top { flex-direction: column; gap: 1.5rem; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .footer-links { gap: 0.75rem 1.25rem; }
+    .footer-links a { padding: 0.25rem 0; }
+    .legal-links { gap: 1rem; }
+  }
+</style>
