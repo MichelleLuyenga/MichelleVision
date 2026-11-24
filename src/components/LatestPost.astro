@@ -1,0 +1,149 @@
+---
+import { getCollection } from 'astro:content';
+
+// 1. Fetch all blog posts directly from your content directory
+const allPosts = await getCollection('blog');
+
+// 2. Sort chronologically and extract the top 3 latest entries
+const latestPosts = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+
+// Helper to format timestamps neatly
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+---
+
+{latestPosts.length > 0 && (
+  <section class="latest-posts-container">
+    <div class="component-header tag-mono">// HOT_SWAP_STREAM // RECENT_LOG_EMISSIONS</div>
+
+    <div class="posts-grid">
+      {latestPosts.map((post) => (
+        <article class="latest-card">
+          <div class="meta-row tag-mono">
+            <span class="meta-date">TIMESTAMP: {formatDate(post.data.pubDate)}</span>
+            <span class="meta-cat">// CLASS: {post.data.topics.toUpperCase()}</span>
+          </div>
+
+          <h3 class="latest-title">
+            <a href={`/blog/${post.id}`}>
+              {post.data.title}
+            </a>
+          </h3>
+
+          {post.data.description && (
+            <p class="latest-desc text-muted">
+              {post.data.description}
+            </p>
+          )}
+
+          <a href={`/blog/${post.id}`} class="read-link tag-mono">
+            Execute Read Routine →
+          </a>
+        </article>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .latest-posts-container {
+    margin-bottom: 4.5rem;
+  }
+  .component-header {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .latest-card {
+    border: 1px solid #1A1C23;
+    background: linear-gradient(135deg, #090A0C 0%, #111317 100%);
+    padding: 2rem;
+    border-radius: 0.25rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .latest-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: #C9A96E;
+  }
+  .meta-row {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .meta-date {
+    color: #C9A96E;
+  }
+  .latest-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .latest-title a {
+    color: #EDE9F0;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .latest-title a:hover {
+    color: #C9A96E;
+  }
+  .latest-desc {
+    margin: 0 0 1.5rem 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .read-link {
+    text-decoration: none;
+    font-size: 0.8125rem;
+    color: #C9A96E;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: auto;
+  }
+  .read-link:hover {
+    text-decoration: underline;
+  }
+  .tag-mono {
+    font-family: 'Fira Code', monospace;
+  }
+  .text-muted {
+    color: #888;
+  }
+
+  @media (max-width: 768px) {
+    .latest-card {
+      padding: 1.5rem;
+    }
+    .latest-title {
+      font-size: 1.125rem;
+    }
+    .meta-row {
+      gap: 0.5rem;
+      flex-direction: column;
+    }
+  }
+</style>
