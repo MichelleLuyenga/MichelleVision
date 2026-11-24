@@ -65,7 +65,7 @@ You need Node.js (see the `engines` field in `package.json` for the supported ve
 
 ```bash
 git clone https://github.com/michelleluyenga/MichelleVision.git
-cd <repo-name>
+cd MichelleVision
 npm install
 cp .env.example .env
 npm run dev
