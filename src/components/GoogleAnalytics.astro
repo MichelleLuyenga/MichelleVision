@@ -1,0 +1,24 @@
+---
+/* Google Analytics 4 Tracking Component
+  Usage: Ingests a stream measurement ID and initializes asynchronously.
+*/
+interface Props {
+  measurementId: string;
+}
+
+const { measurementId } = Astro.props;
+---
+
+<script async src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}></script>
+<script is:inline define:vars={{ measurementId }}>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  // Configure tracking parameters
+  gtag('config', measurementId, {
+    page_path: window.location.pathname,
+    // Prevents tracking during local development loop if desired
+    debug_mode: false 
+  });
+</script>
