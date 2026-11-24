@@ -1,0 +1,315 @@
+---
+// src/pages/cases/michellevision.astro
+// Case study: how this site was designed and built.
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ogWork } from '../../lib/og';
+
+const REPO_URL = 'https://github.com/michelleluyenga'; // change to the exact repository URL if public
+const MEASURED_ON = '';
+
+const goals = [
+  'Show hiring managers and clients, within a few seconds, what I do and which platforms I work on.',
+  'Prove my skills with a real site: SEO, analytics, forms, and content, not just screenshots.',
+  'Make it easy to take the next step, whether that is reading a case study, viewing services, or sending a message.',
+];
+
+const palette = [
+  { name: 'Page', hex: '#090A0C', use: 'Background', contrast: '' },
+  { name: 'Surface', hex: '#111317', use: 'Cards and panels', contrast: '' },
+  { name: 'Border', hex: '#1A1C23', use: '1px dividers and outlines', contrast: '' },
+  { name: 'Heading', hex: '#EDE9F0', use: 'Headings and primary text', contrast: '16.5:1' },
+  { name: 'Body', hex: '#D4D4D8', use: 'Long-form text', contrast: '13.4:1' },
+  { name: 'Muted', hex: '#8A8A93', use: 'Secondary text and labels', contrast: '5.8:1' },
+  { name: 'Gold', hex: '#C9A96E', use: 'Links, labels, primary buttons', contrast: '8.9:1' },
+];
+
+const systemNotes = [
+  { title: 'Color', text: 'A near-black background with one warm gold accent. Gold is reserved for links, labels, and the main button on a page, so it always signals "this is the action".' },
+  { title: 'Type', text: 'Inter for headings and reading, Fira Code for small labels, badges, and buttons. The monospace labels are the site\'s signature, but they are limited to short labels so headlines and body copy stay plain.' },
+  { title: 'Components', text: 'Cards with a 1px border, small chips for tags, status badges for in-progress work, and one primary button per section. Dashed borders mark anything unfinished or optional.' },
+  { title: 'Accessibility', text: 'Visible gold focus outlines for keyboard users, readable contrast on every text color (calculated ratios shown above), tap targets sized for phones, and labels announced to screen readers.' },
+];
+
+// Add screenshot paths once the files exist. See the instructions at the top.
+interface PageEntry {
+  name: string;
+  path: string;
+  problem: string;
+  decisions: string[];
+  desktop?: string;
+  mobile?: string;
+}
+
+const pages: PageEntry[] = [
+  {
+    name: 'Home',
+    path: '/',
+    problem: 'A visitor decides in seconds whether I am relevant, so the page has to say what I do and what to do next.',
+    decisions: [
+      'One plain-language headline that states the outcome: fast, measurable, connected websites.',
+      'One primary button (explore services) and two quieter secondary links.',
+      'Platform cards and a tools strip so the stack is visible without reading a paragraph.',
+    ],
+  },
+  {
+    name: 'Services',
+    path: '/services',
+    problem: 'People hesitate to contact someone when scope and price are unclear.',
+    decisions: [
+      'Fixed-scope packages with the platforms each one covers, a clear price, and a checklist of what is included.',
+      'The most useful package is highlighted with a gold border.',
+      'A "need just one piece?" module list for smaller projects.',
+    ],
+  },
+  {
+    name: 'Platforms guide',
+    path: '/platforms',
+    problem: 'Most clients cannot tell Astro, WordPress, Webflow, and Next.js apart, and choosing wrong is expensive.',
+    decisions: [
+      'Each platform gets a one-sentence fit, a "good for" list, and an honest "watch out" line.',
+      'A quick chooser table answers "which one for my situation?" in one row.',
+    ],
+  },
+  {
+    name: 'Blog',
+    path: '/blog',
+    problem: 'Readers want to find a relevant post quickly and decide whether it is worth their time.',
+    decisions: [
+      'Keyword search, category filters with counts, and load-more paging, built without a framework.',
+      'A short description and date on every row so each post can be judged at a glance.',
+      'Filter controls announce their state to screen readers.',
+    ],
+  },
+  {
+    name: 'Blog post',
+    path: '/blog',
+    problem: 'Long technical articles lose readers when the text is hard to read or the next step is unclear.',
+    decisions: [
+      'A narrow reading width with comfortable line height, styled code blocks, and scrollable tables.',
+      'Reading time, category link, and older and newer post navigation.',
+      'A newsletter signup at the end that submits without leaving the page.',
+    ],
+  },
+  {
+    name: 'Contact',
+    path: '/contact',
+    problem: 'A recruiter and a client need different questions asked, and both should find the form easy on a phone.',
+    decisions: [
+      'One form that changes its fields depending on whether the message is general or a project inquiry.',
+      'A hidden spam trap, clear success and error messages, and submission without a page reload.',
+      'Large inputs on mobile so the phone does not zoom in.',
+    ],
+  },
+];
+
+const stack = [
+  { name: 'Astro (static output)', why: 'Fast pages with very little JavaScript, and the content and routes are checked at build time.' },
+  { name: 'TypeScript and Markdown content collections', why: 'Posts are plain Markdown with a typed schema, so a mistake in a post fails the build instead of reaching visitors.' },
+  { name: 'Build-time Open Graph images', why: 'Every page and post gets its own 1200 by 630 share image, generated during the build.' },
+  { name: 'Technical SEO', why: 'Canonical URLs, Open Graph and Twitter tags, XML sitemap, structured data, and an llms.txt file.' },
+  { name: 'GA4 and Vercel Analytics', why: 'Traffic and page performance, with the GA ID kept in an environment variable and not in the code.' },
+  { name: 'Formspree', why: 'Contact and newsletter forms without running a server.' },
+  { name: 'Vercel and GitHub', why: 'Every commit builds a preview, and failed builds never replace the live site.' },
+];
+
+// Fill in with numbers you measured. Leave `value` out to hide a row.
+const results: { label: string; value?: string; note: string }[] = [
+  { label: 'PageSpeed performance (mobile)', value: undefined, note: 'Score from PageSpeed Insights' },
+  { label: 'PageSpeed accessibility', value: undefined, note: 'Score from PageSpeed Insights' },
+  { label: 'PageSpeed SEO', value: undefined, note: 'Score from PageSpeed Insights' },
+  { label: 'Largest Contentful Paint', value: undefined, note: 'Seconds, mobile' },
+  { label: 'Cumulative Layout Shift', value: undefined, note: 'Score, mobile' },
+];
+const measured = results.filter((r) => r.value);
+
+const next = [
+  'Publish the four sample builds (Astro, WordPress, Webflow) with one shared tracking plan.',
+  'Add tags to every post and tag pages once a tag has three or more posts.',
+  'Add server-side tagging and a CRM so the contact form data is tracked end to end.',
+  'Write up measured before-and-after results for each sample build.',
+];
+---
+
+<BaseLayout
+  title="How I Designed MichelleVision: A Portfolio Case Study"
+  description="The goals, design system, key pages, and technical choices behind michellevision.com, a marketing web developer's portfolio built on Astro."
+  image={ogWork('michellevision')}
+>
+  <article class="cs-container">
+    <p class="tag-mono accent-text">// PORTFOLIO_CASE_STUDY // MICHELLEVISION.COM</p>
+    <h1 class="page-heading">How I designed MichelleVision</h1>
+    <p class="text-muted intro">
+      This site is my portfolio and my first full project. Here is who it is for, how the design works, why each key page looks the way it does, and the technical choices underneath.
+    </p>
+
+    <div class="facts">
+      <div><span class="tag-mono label">ROLE</span><span>Design, build, writing</span></div>
+      <div><span class="tag-mono label">STACK</span><span>Astro, TypeScript, Vercel</span></div>
+      <div><span class="tag-mono label">STATUS</span><span>Live and evolving</span></div>
+      <div><span class="tag-mono label">LINKS</span><span><a href="/">Live site</a> · <a href={REPO_URL} rel="noopener noreferrer" target="_blank">GitHub</a></span></div>
+    </div>
+
+    <h2 class="section-title">1. Goals</h2>
+    <p class="body-text">The site is for hiring managers, marketing teams, and small business owners. It has three jobs:</p>
+    <ul class="body-list">
+      {goals.map((g) => <li>{g}</li>)}
+    </ul>
+
+    <h2 class="section-title">2. Design system</h2>
+    <p class="body-text">One small set of rules is reused everywhere, so each new page looks like it belongs.</p>
+    <ul class="swatches">
+      {palette.map((c) => (
+        <li class="swatch">
+          <span class="chip" style={`background:${c.hex}`} aria-hidden="true"></span>
+          <span class="swatch-text">
+            <strong>{c.name}</strong> <span class="tag-mono hex">{c.hex}</span>
+            <span class="text-muted">{c.use}{c.contrast ? ` · contrast ${c.contrast} on the page color` : ''}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+    <div class="note-grid">
+      {systemNotes.map((n) => (
+        <div class="note-card">
+          <h3 class="tag-mono note-title">{n.title}</h3>
+          <p class="text-muted">{n.text}</p>
+        </div>
+      ))}
+    </div>
+
+    <h2 class="section-title">3. Key pages and the decisions behind them</h2>
+    {pages.map((p) => (
+      <section class="page-block" aria-labelledby={`pg-${p.name.toLowerCase().replace(/\s+/g, '-')}`}>
+        <h3 class="page-name" id={`pg-${p.name.toLowerCase().replace(/\s+/g, '-')}`}>{p.name} <a href={p.path} class="tag-mono view">VIEW_PAGE &rarr;</a></h3>
+        <p class="body-text"><strong>Problem:</strong> {p.problem}</p>
+        <ul class="body-list">
+          {p.decisions.map((d) => <li>{d}</li>)}
+        </ul>
+        <div class="shots">
+          <figure class="shot desktop">
+            {p.desktop
+              ? <img src={p.desktop} alt={`${p.name} page, desktop layout`} loading="lazy" />
+              : <div class="shot-empty tag-mono">DESKTOP_SCREENSHOT_COMING</div>}
+            <figcaption class="tag-mono">Desktop</figcaption>
+          </figure>
+          <figure class="shot mobile">
+            {p.mobile
+              ? <img src={p.mobile} alt={`${p.name} page, phone layout`} loading="lazy" />
+              : <div class="shot-empty tag-mono">PHONE_SCREENSHOT_COMING</div>}
+            <figcaption class="tag-mono">Phone</figcaption>
+          </figure>
+        </div>
+      </section>
+    ))}
+
+    <h2 class="section-title">4. Technical choices</h2>
+    <dl class="stack-list">
+      {stack.map((s) => (
+        <div class="stack-row">
+          <dt>{s.name}</dt>
+          <dd class="text-muted">{s.why}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <h2 class="section-title">5. Results</h2>
+    {measured.length > 0 ? (
+      <>
+        <ul class="results">
+          {measured.map((r) => (
+            <li class="result">
+              <span class="result-value tag-mono">{r.value}</span>
+              <span class="result-label">{r.label}</span>
+              <span class="text-muted result-note">{r.note}</span>
+            </li>
+          ))}
+        </ul>
+        {MEASURED_ON && <p class="text-muted fine">Measured with PageSpeed Insights on {MEASURED_ON}. Scores change over time.</p>}
+      </>
+    ) : (
+      <p class="body-text text-muted">
+        Measured results will be added here after I run PageSpeed Insights on the live site. I only publish numbers I have measured.
+      </p>
+    )}
+
+    <h2 class="section-title">6. What I would improve next</h2>
+    <ul class="body-list">
+      {next.map((n) => <li>{n}</li>)}
+    </ul>
+
+    <div class="cs-cta">
+      <p class="tag-mono accent-text">// WANT_A_SITE_LIKE_THIS?</p>
+      <p class="body-text">I build and optimize marketing websites on Astro, WordPress,and  Webflow.</p>
+      <div class="actions">
+        <a href="/services" class="cta-primary tag-mono">VIEW_SERVICES &rarr;</a>
+        <a href="/contact?stream=consultation" class="cta-secondary tag-mono">START_A_PROJECT</a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .cs-container { max-width: 52rem; margin: 4rem auto; padding: 0 1.25rem; }
+  .accent-text { color: #C9A96E; }
+  .page-heading { font-size: 2.5rem; color: #EDE9F0; margin: 1rem 0; line-height: 1.2; }
+  .intro { font-size: 1.05rem; line-height: 1.6; margin: 0 0 2rem; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: #111317; border: 1px solid #1A1C23; border-radius: 0.375rem; padding: 1.25rem; margin-bottom: 1rem; }
+  .facts div { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; color: #D4D4D8; }
+  .facts a { color: #C9A96E; }
+  .label { font-size: 0.7rem; color: #8A8A93; }
+  .section-title { font-size: 1.5rem; color: #EDE9F0; margin: 3.5rem 0 1rem; }
+  .body-text { color: #D4D4D8; line-height: 1.7; margin: 0 0 1rem; }
+  .body-list { color: #D4D4D8; line-height: 1.7; padding-left: 1.25rem; margin: 0 0 1rem; }
+  .body-list li { margin-bottom: 0.5rem; }
+  .fine { font-size: 0.8125rem; margin: 1rem 0 0; }
+
+  .swatches { list-style: none; margin: 1.25rem 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; }
+  .swatch { display: flex; gap: 0.75rem; align-items: center; background: #111317; border: 1px solid #1A1C23; border-radius: 0.25rem; padding: 0.75rem; }
+  .chip { width: 2.5rem; height: 2.5rem; border-radius: 0.25rem; border: 1px solid #2A2D3A; flex-shrink: 0; }
+  .swatch-text { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.85rem; color: #EDE9F0; min-width: 0; }
+  .hex { font-size: 0.75rem; color: #C9A96E; }
+  .note-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .note-card { background: #111317; border: 1px solid #1A1C23; border-radius: 0.375rem; padding: 1.25rem; }
+  .note-title { color: #C9A96E; font-size: 0.8125rem; margin: 0 0 0.5rem; font-weight: normal; }
+  .note-card p { font-size: 0.875rem; line-height: 1.6; margin: 0; }
+
+  .page-block { border-top: 1px solid #1A1C23; padding-top: 2rem; margin-top: 2rem; }
+  .page-name { font-size: 1.25rem; color: #EDE9F0; margin: 0 0 0.75rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: baseline; }
+  .view { font-size: 0.75rem; color: #C9A96E; text-decoration: none; }
+  .view:hover { color: #EDE9F0; }
+  .shots { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; margin-top: 1.25rem; align-items: start; }
+  .shot { margin: 0; }
+  .shot img { width: 100%; height: auto; display: block; border: 1px solid #1A1C23; border-radius: 0.375rem; }
+  .shot-empty { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 10rem; border: 1px dashed #1A1C23; border-radius: 0.375rem; color: #8A8A93; font-size: 0.7rem; padding: 1rem; }
+  .shot.mobile .shot-empty { min-height: 14rem; }
+  .shot figcaption { font-size: 0.7rem; color: #8A8A93; margin-top: 0.4rem; }
+
+  .stack-list { margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  .stack-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.5rem; background: #111317; border: 1px solid #1A1C23; border-radius: 0.25rem; padding: 1rem 1.25rem; }
+  .stack-row dt { color: #EDE9F0; font-size: 0.9375rem; }
+  .stack-row dd { margin: 0; font-size: 0.875rem; line-height: 1.6; }
+
+  .results { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+  .result { background: #111317; border: 1px solid #1A1C23; border-radius: 0.25rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .result-value { color: #C9A96E; font-size: 1.5rem; font-weight: bold; }
+  .result-label { color: #EDE9F0; font-size: 0.875rem; }
+  .result-note { font-size: 0.75rem; }
+
+  .cs-cta { margin-top: 4rem; background: #111317; border: 1px solid #1A1C23; border-radius: 0.375rem; padding: 2rem; }
+  .cs-cta .body-text { margin-top: 0.25rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .cta-primary { background: #C9A96E; color: #0D0E11; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-weight: bold; font-size: 0.8125rem; }
+  .cta-secondary { background: transparent; color: #EDE9F0; border: 1px solid #1A1C23; padding: 0.875rem 1.5rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.8125rem; }
+  .cta-primary:focus-visible, .cta-secondary:focus-visible, .view:focus-visible, .facts a:focus-visible { outline: 2px solid #C9A96E; outline-offset: 3px; }
+  .tag-mono { font-family: 'Fira Code', monospace; }
+  .text-muted { color: #888; }
+
+  @media (max-width: 768px) {
+    .page-heading { font-size: 2rem; }
+    .shots { grid-template-columns: minmax(0, 1fr); }
+    .stack-row { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+    .cs-cta { padding: 1.5rem; }
+    .cta-primary, .cta-secondary { width: 100%; text-align: center; box-sizing: border-box; }
+  }
+</style>
