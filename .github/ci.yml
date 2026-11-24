@@ -1,0 +1,37 @@
+# Builds the site on every pull request (including Dependabot's) and on pushes to the main branch,
+# so a broken dependency update is caught before it is merged.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the site
+        run: npm run build
+        env:
+          # Secrets are not available to Dependabot pull requests, so the build must work without them.
+          PUBLIC_GA_MEASUREMENT_ID: ""
