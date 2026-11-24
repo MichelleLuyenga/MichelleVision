@@ -64,7 +64,7 @@ This is a clean public version of the site's code. It contains no secrets, and n
 You need Node.js (see the `engines` field in `package.json` for the supported version) and npm.
 
 ```bash
-git clone https://github.com/michelleluyenga/<repo-name>.git
+git clone https://github.com/michelleluyenga/MichelleVision.git
 cd <repo-name>
 npm install
 cp .env.example .env
