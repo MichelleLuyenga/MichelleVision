@@ -1,0 +1,48 @@
+---
+// src/components/IndexNowSubmit.astro
+import { getCollection } from 'astro:content';
+
+const SITE_URL = 'https://michellevision.com';
+const KEY = '<generate-your-own-indexnow-key>'; // Replace with your actual key
+const KEY_LOCATION = `${SITE_URL}/${KEY}.txt`;
+
+// Target indexing production runs only
+if (import.meta.env.PROD) {
+  try {
+    // 1. Fetch all your legacy and new blog post entries
+    const allPosts = await getCollection('blog');
+    
+    // 2. Map them into absolute URL streams
+    const urlList = [
+      SITE_URL,
+      `${SITE_URL}/blog`,
+      ...allPosts.map(post => `${SITE_URL}/blog/${post.id}`)
+    ];
+
+    console.log(`[IndexNow] Preparing payload for ${urlList.length} endpoints...`);
+
+    // 3. Fire the bulk registration request to Bing's endpoint
+    const response = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      body: JSON.stringify({
+        host: new URL(SITE_URL).hostname,
+        key: KEY,
+        keyLocation: KEY_LOCATION,
+        urlList: urlList
+      })
+    });
+
+    if (response.status === 200) {
+      console.log('Successfully broadcasted all records to IndexNow search grids.');
+    } else {
+      console.error(`IndexNow dispatch returned failure code: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('IndexNow pipeline execution encountered an error:', error);
+  }
+}
+---
+<!-- This component compiles during build time and leaves no traces or client-side runtime overhead -->
