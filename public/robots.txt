@@ -1,0 +1,15 @@
+# Global crawlers setup for michellevision.com
+User-agent: *
+Allow: /
+Allow: /cases
+Allow: /cases/*
+Allow: /blog
+Allow: /blog/*
+
+# Prevent crawlers from indexing internal build system configurations or temporary modules
+Disallow: /_astro/
+Disallow: /node_modules/
+Disallow: /.astro/
+
+# Link directly to your XML site map resource index configuration
+Sitemap: https://michellevision.com/sitemap-index.xml
