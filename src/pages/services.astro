@@ -9,7 +9,7 @@ const packages = [
     name: 'Legacy Migration & Integration',
     platforms: 'Astro',
     target: 'For established companies moving a legacy site or monolith to a modern stack without losing data or search rankings.',
-    price: 'From $6,500',
+    scopeLabel: 'Scoped to complexity',
     features: [
       'Full legacy data and URL migration with redirects',
       'Headless CMS setup and editor training',
@@ -18,6 +18,7 @@ const packages = [
       'Production deployment on Vercel or Cloudflare',
     ],
     cta: 'Start a migration',
+    packageKey: 'migration-package',
     featured: false,
   },
   {
@@ -25,7 +26,7 @@ const packages = [
     name: 'Turnkey Design, Build & Scale',
     platforms: 'Astro or Next.js',
     target: 'Complete end-to-end solution from UI design to a fully connected marketing and sales stack.',
-    price: 'From $12,000',
+    scopeLabel: 'Scoped to complexity',
     features: [
       'Custom UI/UX design and brand system',
       'High-performance Astro or Next.js build',
@@ -35,6 +36,7 @@ const packages = [
       'Launch QA, security hardening & handoff documentation',
     ],
     cta: 'Start a turnkey project',
+    packageKey: 'turnkey-package',
     featured: true,
   },
   {
@@ -42,7 +44,7 @@ const packages = [
     name: 'Headless Commerce & Growth',
     platforms: 'Next.js with Shopify or Stripe',
     target: 'For online shops that want faster pages, cleaner data, and email and ads that act on real purchase behavior.',
-    price: 'From $8,500',
+    scopeLabel: 'Scoped to complexity',
     features: [
       'Headless storefront build',
       'Product feeds for Google and Meta shopping',
@@ -51,6 +53,7 @@ const packages = [
       'Scoped order, inventory, and fulfillment automation',
     ],
     cta: 'Start a commerce project',
+    packageKey: 'commerce-package',
     featured: false,
   },
 ];
@@ -65,20 +68,19 @@ const modules = [
   { name: 'Advertising', detail: 'Conversion APIs, remarketing audiences, UTM governance' },
   { name: 'Workflow integration', detail: 'Make or Zapier flows with error alerts' },
 ];
-
 ---
 
 <BaseLayout
   title="Marketing Web Development Packages | Astro & Next.js"
-  description="Fixed-scope packages for marketing websites on Astro and Next.js: builds, migrations, optimization, e-commerce, CRM, CDP, analytics, marketing automation, and ad tracking."
+  description="Scope-based packages for marketing websites on Astro and Next.js: builds, migrations, optimization, e-commerce, CRM, CDP, analytics, marketing automation, and ad tracking."
   image={ogWork('services')}
 >
   <section class="services-container">
     <div class="services-header">
-      <p class="tag-mono accent-text">// TURNKEY_PACKAGES // DESIGN_BUILD_INTEGRATE_HOST</p>
+      <p class="tag-mono accent-text">// SCOPED_PACKAGES // DESIGN_BUILD_INTEGRATE_HOST</p>
       <h1 class="page-heading">Marketing Web Development Packages</h1>
       <p class="text-muted subtitle">
-        Fixed-scope packages that cover the full lifecycle: design, build or optimization, the integrations that connect your marketing and sales tools, and managed hosting. Not sure which platform you need? <a href="/platforms" class="accent-text">Read the platform guide</a>.
+        Packages scoped around your stack, data complexity, and goals—covering design, build or optimization, marketing and sales integrations, and deployment. Share your setup asynchronously and I will send a tailored scope and estimate. Not sure which platform you need? <a href="/platforms" class="accent-text">Read the platform guide</a>.
       </p>
     </div>
 
@@ -93,12 +95,12 @@ const modules = [
             <p class="text-muted tier-target">{pkg.target}</p>
           </div>
           <div class:list={['tier-price tag-mono', { 'accent-text': pkg.featured }]}>
-            {pkg.price} <span class="price-freq">/ PROJECT</span>
+            {pkg.scopeLabel} <span class="price-freq">// ASYNC QUOTE</span>
           </div>
           <ul class="tier-features">
             {pkg.features.map((f) => <li>{f}</li>)}
           </ul>
-          <a href="/contact?stream=consultation" class:list={['tier-btn tag-mono', { 'featured-btn': pkg.featured }]}>
+          <a href={`/contact?stream=consultation&package=${pkg.packageKey}`} class:list={['tier-btn tag-mono', { 'featured-btn': pkg.featured }]}>
             {pkg.cta} &rarr;
           </a>
         </div>
@@ -135,7 +137,7 @@ const modules = [
   .tier-name { font-size: 1.5rem; color: #EDE9F0; margin: 0.5rem 0; }
   .tier-platforms { font-size: 0.7rem; color: #C9A96E; margin: 0 0 0.75rem; line-height: 1.5; }
   .tier-target { font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem; }
-  .tier-price { font-size: 1.75rem; color: #EDE9F0; font-weight: bold; margin-bottom: 1.5rem; border-top: 1px solid #1A1C23; border-bottom: 1px solid #1A1C23; padding: 1rem 0; }
+  .tier-price { font-size: 1.35rem; color: #EDE9F0; font-weight: bold; margin-bottom: 1.5rem; border-top: 1px solid #1A1C23; border-bottom: 1px solid #1A1C23; padding: 1rem 0; }
   .price-freq { font-size: 0.75rem; color: #888; font-weight: normal; }
   .tier-features { list-style: none; padding: 0; margin: 0 0 2rem 0; font-size: 0.875rem; line-height: 1.45; color: #D4D4D8; display: flex; flex-direction: column; gap: 0.75rem; flex-grow: 1; }
   .tier-features li { padding-left: 1.25rem; position: relative; }
