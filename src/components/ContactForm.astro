@@ -47,10 +47,10 @@ const integrationOptions = [
     <div class="form-field conditional-field" id="budget-field" style={stream === 'consultation' ? "display: flex;" : "display: none;"}>
       <label for="project-budget">PROJECT_PACKAGE_OR_SCOPE *</label>
       <select name="project_budget" id="project-budget">
-        <option value="" disabled selected>Select solution package...</option>
-        <option value="migration-package">FROM $6,500 (Legacy Migration & System Integration)</option>
-        <option value="commerce-package">FROM $8,500 (Headless Commerce & Growth)</option>
-        <option value="turnkey-package">FROM $12,000 (Turnkey Design, Build & Scale)</option>
+        <option value="" disabled selected>Select solution package or scope...</option>
+        <option value="migration-package">Legacy Migration & System Integration (Scoped)</option>
+        <option value="commerce-package">Headless Commerce & Growth (Scoped)</option>
+        <option value="turnkey-package">Turnkey Design, Build & Scale (Scoped)</option>
         <option value="single-integration">Single integration or add-on module</option>
         <option value="custom-enterprise">Custom Enterprise Architecture & Data ETL</option>
       </select>
@@ -90,7 +90,7 @@ const integrationOptions = [
       <label for="message" id="message-label">
         {stream === 'consultation' ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE'}
       </label>
-      <textarea name="message" id="message" rows="4" required placeholder={stream === 'consultation' ? "Describe your current site, the tools you use, data volume, and what you want connected or automated..." : "Type here..."}></textarea>
+      <textarea name="message" id="message" rows="4" required placeholder={stream === 'consultation' ? "Describe your current site, the tools you use, approximate data/SKU/URL volume, target timeline, and what you want connected or automated..." : "Type here..."}></textarea>
     </div>
 
     <p id="form-error-node" class="error-block" role="alert" style="display: none;">
@@ -104,7 +104,7 @@ const integrationOptions = [
 
   <div id="form-success-node" class="success-block" role="status" style="display: none;">
     <span class="tag-mono">// TRANSMISSION_SUCCESSFUL</span>
-    <p>Your packet has been routed. Expect a response vector within 24 hours.</p>
+    <p>Your packet has been routed. Expect a scoped response within 24 hours.</p>
   </div>
 </div>
 
@@ -180,18 +180,25 @@ const integrationOptions = [
       techStackInput.required = isConsult;
       messageLabel.textContent = isConsult ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE';
       messageInput.placeholder = isConsult
-        ? 'Describe your current site, the tools you use, data volume, and what you want connected or automated...'
+        ? 'Describe your current site, the tools you use, approximate data/SKU/URL volume, target timeline, and what you want connected or automated...'
         : 'Type here...';
       submitBtn.textContent = isConsult ? labels.consultation : labels.general;
       title.textContent = isConsult ? 'Scope a Marketing Web Project' : 'Get in Touch';
       indicator.textContent = isConsult ? 'ECOSYSTEM_CONSULTATION' : 'GENERAL_INQUIRY';
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const requestedPackage = params.get('package');
+    if (requestedPackage && Array.from(budgetInput.options).some((opt) => opt.value === requestedPackage)) {
+      budgetInput.value = requestedPackage;
+    }
+
+    renderToggleState(selector.value);
+
     selector.addEventListener('change', (e) => {
       renderToggleState((e.target as HTMLSelectElement).value);
     });
 
-    // Send with fetch so the form only shows success after Formspree confirms it.
     formElement.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorNode.style.display = 'none';
