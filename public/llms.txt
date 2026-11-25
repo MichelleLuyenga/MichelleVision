@@ -7,9 +7,10 @@
 - Platform guide: https://www.michellevision.com/platforms
 
 ## Core Services & Packages
-- Legacy Migration & Integration (FROM $6,500): migrations to Astro or Next.js, ETL data pipelines, URL redirects, CRM/ERP data syncing, GA4 and tag manager setup, secure hosting.
-- Turnkey Design, Build & Scale (FROM $12,000): UI/UX design, site build on Astro or Next.js, CDP/CRM/marketing automation integration, analytics event planning, ad conversion tracking, launch QA and handoff.
-- Headless Commerce & Growth (FROM $8,500): headless storefronts, product feeds for Google and Meta, abandoned-cart and post-purchase automation, server-side purchase tracking, order and inventory workflow automation.
+Engagements are scoped asynchronously based on technical complexity, data volume, and integration requirements:
+- Legacy Migration & Integration: migrations to Astro or Next.js, ETL data pipelines, URL redirects, CRM/ERP data syncing, GA4 and tag manager setup, secure hosting.
+- Turnkey Design, Build & Scale: UI/UX design, site build on Astro or Next.js, CDP/CRM/marketing automation integration, analytics event planning, ad conversion tracking, launch QA and handoff.
+- Headless Commerce & Growth: headless storefronts, product feeds for Google and Meta, abandoned-cart and post-purchase automation, server-side purchase tracking, order and inventory workflow automation.
 - Single integrations and add-on modules, including headless WordPress with an Astro front end.
 
 ## Integration Coverage
