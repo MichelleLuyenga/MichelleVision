@@ -5,59 +5,128 @@ interface Props {
 }
 
 const { stream = 'general' } = Astro.props;
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/<your-own-formspree-code>";
+
+const urlStream = Astro.url.searchParams.get('stream');
+const urlPackage = Astro.url.searchParams.get('package');
+const initialStream: 'general' | 'consultation' =
+  urlStream === 'consultation' || urlStream === 'general'
+    ? urlStream
+    : urlPackage
+      ? 'consultation'
+      : stream;
+
+const FORMSPREE_ENDPOINT =
+  import.meta.env.PUBLIC_FORMSPREE_ENDPOINT ??
+  'https://formspree.io/f/REPLACE_ME';
+
+if (import.meta.env.DEV && FORMSPREE_ENDPOINT.includes('REPLACE_ME')) {
+  console.error(
+    '[ContactForm] PUBLIC_FORMSPREE_ENDPOINT is not set. Set it in .env to a real Formspree URL.'
+  );
+}
 
 const integrationOptions = [
-  'E-commerce', 'CMS', 'CDP', 'CRM', 'Analytics',
-  'Marketing automation', 'Advertising', 'Workflow automation', 'ERP / BI',
+  'E-commerce',
+  'CMS',
+  'CDP',
+  'CRM',
+  'Analytics',
+  'Marketing automation',
+  'Advertising',
+  'Workflow automation',
+  'ERP / BI',
 ];
 ---
 
-<div class="form-card" data-default-stream={stream}>
-  <div class="form-header-block" style="margin-bottom: 2rem;">
-    <p class="tag-mono">// INTAKE_STREAM: <span id="stream-indicator">{stream.toUpperCase()}</span></p>
-    <h3 id="form-title" style="font-size: 1.5rem; margin: 0.5rem 0 0 0; color: #EDE9F0;">
-      {stream === 'consultation' ? 'Scope a Marketing Web Project' : 'Get in Touch'}
+<div class="form-card" data-default-stream={initialStream}>
+  <div class="form-header-block">
+    <p class="tag-mono">
+      // INTAKE_STREAM:
+      <span id="stream-indicator" aria-live="polite">
+        {initialStream.toUpperCase()}
+      </span>
+    </p>
+    <h3 id="form-title" class="form-title">
+      {initialStream === 'consultation'
+        ? 'Scope a Marketing Web Project'
+        : 'Get in Touch'}
     </h3>
   </div>
 
-  <form action={FORMSPREE_ENDPOINT} method="POST" id="unified-smart-form" class="consultation-form">
-    <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+  <form
+    action={FORMSPREE_ENDPOINT}
+    method="POST"
+    id="unified-smart-form"
+    class="consultation-form"
+  >
+    <input
+      type="text"
+      name="_gotcha"
+      class="honeypot"
+      tabindex="-1"
+      autocomplete="off"
+    />
 
     <div class="form-field">
       <label for="intent-select">ROUTING_TARGET</label>
       <select name="inquiry_type" id="intent-select" required>
-        <option value="general" selected={stream === 'general'}>General Message / Recruiter or Hiring Inquiry</option>
-        <option value="consultation" selected={stream === 'consultation'}>Web Development, Migration & MarTech Integration</option>
+        <option value="general" selected={initialStream === 'general'}>
+          General Message / Recruiter or Hiring Inquiry
+        </option>
+        <option value="consultation" selected={initialStream === 'consultation'}>
+          Web Development, Migration &amp; MarTech Integration
+        </option>
       </select>
     </div>
 
     <div class="form-group-row">
       <div class="form-field">
         <label for="name">NAME</label>
-        <input type="text" name="name" id="name" required placeholder="Your name" autocomplete="name" />
+        <input
+          type="text"
+          name="name"
+          id="name"
+          required
+          placeholder="Your name"
+          autocomplete="name"
+        />
       </div>
       <div class="form-field">
         <label for="email">EMAIL</label>
-        <input type="email" name="email" id="email" required placeholder="name@domain.com" autocomplete="email" />
+        <input
+          type="email"
+          name="email"
+          id="email"
+          required
+          placeholder="name@domain.com"
+          autocomplete="email"
+        />
       </div>
     </div>
 
-    <!-- Package selection -->
-    <div class="form-field conditional-field" id="budget-field" style={stream === 'consultation' ? "display: flex;" : "display: none;"}>
+    <!-- Package selection (consultation only) -->
+    <div
+      class="form-field conditional-field"
+      id="budget-field"
+      style={initialStream === 'consultation' ? 'display: flex;' : 'display: none;'}
+    >
       <label for="project-budget">PROJECT_PACKAGE_OR_SCOPE *</label>
       <select name="project_budget" id="project-budget">
         <option value="" disabled selected>Select solution package or scope...</option>
-        <option value="migration-package">Legacy Migration & System Integration (Scoped)</option>
-        <option value="commerce-package">Headless Commerce & Growth (Scoped)</option>
-        <option value="turnkey-package">Turnkey Design, Build & Scale (Scoped)</option>
+        <option value="migration-package">Legacy Migration &amp; System Integration (Scoped)</option>
+        <option value="commerce-package">Headless Commerce &amp; Growth (Scoped)</option>
+        <option value="turnkey-package">Turnkey Design, Build &amp; Scale (Scoped)</option>
         <option value="single-integration">Single integration or add-on module</option>
-        <option value="custom-enterprise">Custom Enterprise Architecture & Data ETL</option>
+        <option value="custom-enterprise">Custom Enterprise Architecture &amp; Data ETL</option>
       </select>
     </div>
 
-    <!-- Platform preference -->
-    <div class="form-field conditional-field" id="platform-field" style={stream === 'consultation' ? "display: flex;" : "display: none;"}>
+    <!-- Platform preference (consultation only) -->
+    <div
+      class="form-field conditional-field"
+      id="platform-field"
+      style={initialStream === 'consultation' ? 'display: flex;' : 'display: none;'}
+    >
       <label for="preferred-platform">PREFERRED_PLATFORM</label>
       <select name="preferred_platform" id="preferred-platform">
         <option value="" selected>No preference, recommend one</option>
@@ -67,8 +136,13 @@ const integrationOptions = [
       </select>
     </div>
 
-    <!-- Integrations needed -->
-    <fieldset class="form-field conditional-field integrations" id="integrations-field" style={stream === 'consultation' ? "display: flex;" : "display: none;"}>
+    <!-- Integrations needed (consultation only) -->
+    <!-- FIXED: Removed "form-field" class to prevent checkboxes from stretching -->
+    <fieldset
+      class="conditional-field integrations"
+      id="integrations-field"
+      style={initialStream === 'consultation' ? 'display: flex;' : 'display: none;'}
+    >
       <legend>INTEGRATIONS_NEEDED (SELECT ALL THAT APPLY)</legend>
       <div class="check-grid">
         {integrationOptions.map((opt) => (
@@ -80,130 +154,309 @@ const integrationOptions = [
       </div>
     </fieldset>
 
-    <!-- Current stack -->
-    <div class="form-field conditional-field" id="business-field" style={stream === 'consultation' ? "display: flex;" : "display: none;"}>
-      <label for="tech_stack">CURRENT TECH STACK & TOOLS *</label>
-      <input type="text" name="tech_stack" id="tech_stack" placeholder="e.g., WordPress + WooCommerce + HubSpot + Klaviyo + GA4" />
+    <!-- Current stack (consultation only) -->
+    <div
+      class="form-field conditional-field"
+      id="business-field"
+      style={initialStream === 'consultation' ? 'display: flex;' : 'display: none;'}
+    >
+      <label for="tech_stack">CURRENT TECH STACK &amp; TOOLS *</label>
+      <input
+        type="text"
+        name="tech_stack"
+        id="tech_stack"
+        placeholder="e.g., WordPress + WooCommerce + HubSpot + Klaviyo + GA4"
+      />
     </div>
 
     <div class="form-field">
       <label for="message" id="message-label">
-        {stream === 'consultation' ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE'}
+        {initialStream === 'consultation' ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE'}
       </label>
-      <textarea name="message" id="message" rows="4" required placeholder={stream === 'consultation' ? "Describe your current site, the tools you use, approximate data/SKU/URL volume, target timeline, and what you want connected or automated..." : "Type here..."}></textarea>
+      <textarea
+        name="message"
+        id="message"
+        rows="4"
+        required
+        placeholder={initialStream === 'consultation'
+          ? 'Describe your current site, the tools you use, approximate data/SKU/URL volume, target timeline, and what you want connected or automated...'
+          : 'Type here...'}></textarea>
     </div>
 
-    <p id="form-error-node" class="error-block" role="alert" style="display: none;">
+    <p id="form-error-node" class="error-block" role="alert" tabindex="-1" style="display: none;">
       The message did not send. Check your connection and try again, or email me directly.
     </p>
 
     <button type="submit" class="submit-btn" id="submit-btn">
-      {stream === 'consultation' ? 'INITIATE_ECOSYSTEM_DIAGNOSTICS →' : 'SEND_DIRECT_MESSAGE →'}
+      {initialStream === 'consultation'
+        ? 'INITIATE_ECOSYSTEM_DIAGNOSTICS →'
+        : 'SEND_DIRECT_MESSAGE →'}
     </button>
   </form>
 
-  <div id="form-success-node" class="success-block" role="status" style="display: none;">
+  <div id="form-success-node" class="success-block" role="status" tabindex="-1" style="display: none;">
     <span class="tag-mono">// TRANSMISSION_SUCCESSFUL</span>
     <p>Your packet has been routed. Expect a scoped response within 24 hours.</p>
   </div>
 </div>
 
 <style>
-  .form-group-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  .form-card { background: #111317; border: 1px solid #1A1C23; padding: 2.5rem; border-radius: 0.375rem; }
+  .form-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+    border-radius: var(--radius-md);
+  }
+  .form-header-block { margin-bottom: 2rem; }
+  .form-title {
+    font-size: 1.5rem;
+    margin: 0.5rem 0 0 0;
+    color: var(--text);
+  }
+
+  .consultation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .form-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Standardize label typography */
+  .form-field label,
+  .integrations legend {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  /* Input, Select, Textarea styling */
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.85rem;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    border-radius: var(--radius-sm);
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-field input:focus-visible,
+  .form-field select:focus-visible,
+  .form-field textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .honeypot { display: none; }
+
+  /* Fieldset / Integrations styling */
+  .integrations {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .integrations legend {
+    padding: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
+  }
+
+  /* Checkbox item styling */
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #D4D4D8;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .check-item:hover {
+    background: var(--bg-hover);
+  }
+  .check-item:has(input:checked) { 
+    border-color: var(--accent); 
+    background: var(--accent-soft);
+  }
+
+  /* Explicit sizing for checkboxes to override any global input styles */
+  .check-item input {
+    accent-color: var(--accent);
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0; /* Prevents checkbox from shrinking */
+    padding: 0;
+    margin: 0;
+  }
+
+  .submit-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: transform 0.1s, opacity 0.15s;
+  }
+  .submit-btn:hover { transform: translateY(-1px); }
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+  }
+  .submit-btn:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+  }
+
+  .success-block {
+    border: 1px dashed var(--accent);
+    padding: 1.5rem;
+    background: var(--accent-soft);
+    text-align: center;
+    border-radius: var(--radius-sm);
+  }
+  .error-block {
+    border: 1px dashed var(--error);
+    padding: 1rem;
+    margin: 0;
+    color: var(--error);
+    font-size: 0.875rem;
+    border-radius: var(--radius-sm);
+  }
+
   @media (max-width: 600px) {
     .form-card { padding: 1.5rem; }
     .form-group-row { grid-template-columns: 1fr; gap: 1.25rem; }
-    .form-field input, .form-field select, .form-field textarea { font-size: 16px; width: 100%; box-sizing: border-box; }
+
+    /* Input override to prevent iOS zoom */
+    .form-field input,
+    .form-field select,
+    .form-field textarea { 
+      font-size: 16px; 
+      width: 100%; 
+      box-sizing: border-box; 
+    }
+
+    /* Mobile tweaks for checkboxes */
+    .check-item {
+      padding: 0.85rem;
+    }
+    .check-item span {
+      font-size: 1rem; /* Prevents iOS auto-zoom */
+    }
   }
-  .consultation-form { display: flex; flex-direction: column; gap: 1.5rem; }
-  .form-field { display: flex; flex-direction: column; gap: 0.5rem; }
-  .form-field label, .integrations legend { font-family: 'Fira Code', monospace; font-size: 0.75rem; color: #888; }
-  .form-field input, .form-field select, .form-field textarea {
-    background: #000; border: 1px solid #1A1C23; padding: 0.85rem; color: #EDE9F0; font-family: inherit; font-size: 0.9375rem;
-  }
-  .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: #C9A96E; }
-  .form-field input:focus-visible, .form-field select:focus-visible, .form-field textarea:focus-visible { outline: 2px solid #C9A96E; outline-offset: 2px; }
-  .integrations { border: 0; padding: 0; margin: 0; min-width: 0; }
-  .integrations legend { padding: 0; margin-bottom: 0.5rem; }
-  .check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; }
-  .check-item { display: flex; align-items: center; gap: 0.6rem; background: #000; border: 1px solid #1A1C23; padding: 0.6rem 0.75rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem; color: #D4D4D8; }
-  .check-item:has(input:checked) { border-color: #C9A96E; }
-  .check-item input { accent-color: #C9A96E; width: 1rem; height: 1rem; padding: 0; }
-  .submit-btn {
-    background: #C9A96E; color: #000; border: none; padding: 1rem; font-family: 'Fira Code', monospace;
-    font-weight: bold; cursor: pointer; transition: transform 0.1s;
-  }
-  .submit-btn:hover { transform: translateY(-1px); }
-  .submit-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
-  .submit-btn:focus-visible { outline: 2px solid #EDE9F0; outline-offset: 3px; }
-  .success-block { border: 1px dashed #C9A96E; padding: 1.5rem; background: rgba(201, 169, 110, 0.02); text-align: center; }
-  .error-block { border: 1px dashed #E5736B; padding: 1rem; margin: 0; color: #E5736B; font-size: 0.875rem; }
-  .tag-mono { font-family: 'Fira Code', monospace; color: #C9A96E; font-size: 0.8125rem; }
 </style>
 
 <script>
-  function runComponentLogic() {
-    const card = document.querySelector('.form-card') as HTMLDivElement;
-    if (!card) return;
+  type Stream = 'general' | 'consultation';
 
-    const selector = card.querySelector('#intent-select') as HTMLSelectElement;
-    const budgetField = card.querySelector('#budget-field') as HTMLDivElement;
-    const budgetInput = card.querySelector('#project-budget') as HTMLSelectElement;
-    const platformField = card.querySelector('#platform-field') as HTMLDivElement;
-    const integrationsField = card.querySelector('#integrations-field') as HTMLFieldSetElement;
-    const businessField = card.querySelector('#business-field') as HTMLDivElement;
-    const techStackInput = card.querySelector('#tech_stack') as HTMLInputElement;
-    const messageLabel = card.querySelector('#message-label') as HTMLLabelElement;
-    const messageInput = card.querySelector('#message') as HTMLTextAreaElement;
-    const submitBtn = card.querySelector('#submit-btn') as HTMLButtonElement;
-    const title = card.querySelector('#form-title') as HTMLHeadingElement;
-    const indicator = card.querySelector('#stream-indicator') as HTMLSpanElement;
-    const formElement = card.querySelector('#unified-smart-form') as HTMLFormElement;
-    const successNode = card.querySelector('#form-success-node') as HTMLDivElement;
-    const errorNode = card.querySelector('#form-error-node') as HTMLParagraphElement;
+  function initForm(card: HTMLDivElement) {
+    if (card.dataset.initialized === 'true') return;
+    card.dataset.initialized = 'true';
 
-    if (!selector || !budgetField || !budgetInput || !platformField || !integrationsField || !businessField || !techStackInput || !submitBtn || !messageLabel || !title || !formElement || !successNode || !errorNode) return;
+    const selector = card.querySelector('#intent-select') as HTMLSelectElement | null;
+    const budgetField = card.querySelector('#budget-field') as HTMLDivElement | null;
+    const budgetInput = card.querySelector('#project-budget') as HTMLSelectElement | null;
+    const platformField = card.querySelector('#platform-field') as HTMLDivElement | null;
+    const integrationsField = card.querySelector('#integrations-field') as HTMLFieldSetElement | null;
+    const businessField = card.querySelector('#business-field') as HTMLDivElement | null;
+    const techStackInput = card.querySelector('#tech_stack') as HTMLInputElement | null;
+    const messageLabel = card.querySelector('#message-label') as HTMLLabelElement | null;
+    const messageInput = card.querySelector('#message') as HTMLTextAreaElement | null;
+    const submitBtn = card.querySelector('#submit-btn') as HTMLButtonElement | null;
+    const title = card.querySelector('#form-title') as HTMLHeadingElement | null;
+    const indicator = card.querySelector('#stream-indicator') as HTMLSpanElement | null;
+    const formElement = card.querySelector('#unified-smart-form') as HTMLFormElement | null;
+    const successNode = card.querySelector('#form-success-node') as HTMLDivElement | null;
+    const errorNode = card.querySelector('#form-error-node') as HTMLParagraphElement | null;
+
+    if (
+      !selector || !budgetField || !budgetInput || !platformField ||
+      !integrationsField || !businessField || !techStackInput ||
+      !messageLabel || !messageInput || !submitBtn || !title || !indicator ||
+      !formElement || !successNode || !errorNode
+    ) return;
 
     const labels = {
       consultation: 'INITIATE_ECOSYSTEM_DIAGNOSTICS →',
       general: 'SEND_DIRECT_MESSAGE →',
     };
 
-    function renderToggleState(mode: string) {
+    function renderToggleState(mode: Stream) {
       const isConsult = mode === 'consultation';
-      budgetField.style.display = isConsult ? 'flex' : 'none';
-      budgetInput.required = isConsult;
-      platformField.style.display = isConsult ? 'flex' : 'none';
-      integrationsField.style.display = isConsult ? 'flex' : 'none';
-      businessField.style.display = isConsult ? 'flex' : 'none';
-      techStackInput.required = isConsult;
-      messageLabel.textContent = isConsult ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE';
-      messageInput.placeholder = isConsult
+      budgetField!.style.display = isConsult ? 'flex' : 'none';
+      budgetInput!.required = isConsult;
+      platformField!.style.display = isConsult ? 'flex' : 'none';
+      integrationsField!.style.display = isConsult ? 'flex' : 'none';
+      businessField!.style.display = isConsult ? 'flex' : 'none';
+      techStackInput!.required = isConsult;
+      messageLabel!.textContent = isConsult ? 'PROJECT_SCOPE_&_OBJECTIVES' : 'MESSAGE';
+      messageInput!.placeholder = isConsult
         ? 'Describe your current site, the tools you use, approximate data/SKU/URL volume, target timeline, and what you want connected or automated...'
         : 'Type here...';
-      submitBtn.textContent = isConsult ? labels.consultation : labels.general;
-      title.textContent = isConsult ? 'Scope a Marketing Web Project' : 'Get in Touch';
-      indicator.textContent = isConsult ? 'ECOSYSTEM_CONSULTATION' : 'GENERAL_INQUIRY';
+      submitBtn!.textContent = isConsult ? labels.consultation : labels.general;
+      title!.textContent = isConsult ? 'Scope a Marketing Web Project' : 'Get in Touch';
+      indicator!.textContent = isConsult ? 'ECOSYSTEM_CONSULTATION' : 'GENERAL_INQUIRY';
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const requestedPackage = params.get('package');
-    if (requestedPackage && Array.from(budgetInput.options).some((opt) => opt.value === requestedPackage)) {
-      budgetInput.value = requestedPackage;
+    const url = new URL(window.location.href);
+    const urlStream = url.searchParams.get('stream');
+    const urlPackage = url.searchParams.get('package');
+
+    if (urlPackage) {
+      selector.value = 'consultation';
+      if (Array.from(budgetInput.options).some((o) => o.value === urlPackage)) {
+        budgetInput.value = urlPackage;
+      }
+    } else if (urlStream === 'consultation' || urlStream === 'general') {
+      selector.value = urlStream;
     }
 
-    renderToggleState(selector.value);
+    renderToggleState(selector.value as Stream);
 
     selector.addEventListener('change', (e) => {
-      renderToggleState((e.target as HTMLSelectElement).value);
+      renderToggleState((e.target as HTMLSelectElement).value as Stream);
     });
 
     formElement.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorNode.style.display = 'none';
+
       const originalLabel = submitBtn.textContent;
       submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
       submitBtn.textContent = 'SENDING...';
 
       try {
@@ -214,16 +467,30 @@ const integrationOptions = [
         });
         if (!response.ok) throw new Error(`Formspree responded ${response.status}`);
 
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        (window as any).dataLayer.push({
+          event: 'contact_form_submitted',
+          stream: selector.value,
+          package: budgetInput.value || null,
+        });
+
         formElement.reset();
         formElement.style.display = 'none';
         successNode.style.display = 'block';
+        successNode.focus();
       } catch (err) {
         console.error('Contact form error:', err);
         errorNode.style.display = 'block';
+        errorNode.focus();
         submitBtn.textContent = originalLabel;
         submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
       }
     });
+  }
+
+  function runComponentLogic() {
+    document.querySelectorAll<HTMLDivElement>('.form-card').forEach(initForm);
   }
 
   runComponentLogic();
