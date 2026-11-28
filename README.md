@@ -84,6 +84,7 @@ The site runs at `http://localhost:4321`.
 | Variable | Purpose |
 | --- | --- |
 | `PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID. Leave it empty to turn Google Analytics off. |
+| `PUBLIC_FORMSPREE_ENDPOINT` | Formspree link code. Leave it empty to turn off form submission. |
 
 Set the same variables in your hosting dashboard. Do not commit a `.env` file.
 
